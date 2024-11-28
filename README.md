@@ -4,3 +4,5 @@
 [![Maintainability](https://api.codeclimate.com/v1/badges/0b40fc097341d227ed04/maintainability)](https://codeclimate.com/github/LiudmilaKorchikova/java-project-72/maintainability)
 ### Test Coverage:
 [![Test Coverage](https://api.codeclimate.com/v1/badges/0b40fc097341d227ed04/test_coverage)](https://codeclimate.com/github/LiudmilaKorchikova/java-project-72/test_coverage)
+### Link for deployed app:
+https://java-project-72-i8oa.onrender.com
