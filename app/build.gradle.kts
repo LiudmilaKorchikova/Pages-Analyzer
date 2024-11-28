@@ -3,10 +3,15 @@ plugins {
     id("application")
     id("checkstyle")
     id("jacoco")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "hexlet.code"
 version = "1.0-SNAPSHOT"
+
+application {
+    mainClass.set("hexlet.code.App")
+}
 
 repositories {
     mavenCentral()
@@ -31,6 +36,9 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.14.0")
+
+    implementation("org.slf4j:slf4j-simple:2.0.16")
+    implementation("io.javalin:javalin:6.3.0")
 }
 
 tasks.test {
