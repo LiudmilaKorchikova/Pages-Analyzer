@@ -20,8 +20,6 @@ public final class App {
     private static UrlRepository urlRepository;
 
     public static Javalin getApp() throws Exception {
-        String portEnv = System.getenv("PORT");
-        int port = (portEnv != null) ? Integer.parseInt(portEnv) : 7000;
 
 
         var app = Javalin.create(config -> {
@@ -41,13 +39,15 @@ public final class App {
 
         app.get("/urls/:id", UrlController::showUrlByIdHandler);
 
-        app.start(port);
-
         return app;
     }
 
     public static void main(String[] args) throws Exception {
+        String portEnv = System.getenv("PORT");
+        int port = (portEnv != null) ? Integer.parseInt(portEnv) : 7000;
         Javalin app = getApp();
+        app.start(port);
+
     }
 
     private static TemplateEngine createTemplateEngine() {
