@@ -58,6 +58,25 @@ public class UrlRepository extends BaseRepository {
         return Optional.empty();
     }
 
+    public static Optional<Url> findByIndex(Long index) throws SQLException {
+        var sql = "SELECT id, name, created_at FROM urls WHERE id = ?";
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setLong(1, index);
+            try (var resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    Url url = new Url(
+                            resultSet.getString("name"),
+                            resultSet.getTimestamp("created_at").toLocalDateTime()
+                    );
+                    url.setId(resultSet.getLong("id"));
+                    return Optional.of(url);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     public static boolean existsByName(String name) throws SQLException {
         var sql = "SELECT 1 FROM urls WHERE name = ? LIMIT 1";
         try (var conn = dataSource.getConnection();

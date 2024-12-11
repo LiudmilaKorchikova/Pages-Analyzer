@@ -1,8 +1,10 @@
+@import hexlet.code.dto.urls.MainPage
 @import hexlet.code.utils.NamedRoutes
-@import hexlet.code.dto.BasePage
-@param BasePage page = null
+
+@param MainPage page
 
 @template.layout.page(
+    page = page,
     content = @`
 
         <!-- Форма для ввода URL -->

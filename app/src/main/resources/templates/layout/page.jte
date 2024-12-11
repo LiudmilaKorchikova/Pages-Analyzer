@@ -1,5 +1,8 @@
 @import gg.jte.Content
+@import hexlet.code.dto.BasePage
+
 @param Content content
+@param BasePage page = null
 
 <!DOCTYPE html>
 <html lang="en">
@@ -12,6 +15,10 @@
 <body>
 
     <!-- Контент страницы будет вставляться сюда -->
+
+        @if(page != null && page.getFlash() != null)
+            <p>${page.getFlash()}</p>
+        @endif
         ${content}
 
     <!-- Футер -->

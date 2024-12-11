@@ -10,6 +10,10 @@ import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import io.javalin.rendering.template.JavalinJte;
 import gg.jte.resolve.ResourceCodeResolver;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.Statement;
 
 import hexlet.code.repository.BaseRepository;
 
@@ -21,6 +25,20 @@ public final class App {
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", "7070");
         return Integer.valueOf(port);
+    }
+
+    public static void initDatabase() throws Exception {
+        InputStream inputStream = App.class.getClassLoader().getResourceAsStream("urls.sql");
+        if (inputStream == null) {
+            throw new Exception("SQL script not found in resources!");
+        }
+
+        String sql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+        try (Connection connection = BaseRepository.dataSource.getConnection()) {
+            Statement statement = connection.createStatement();
+            statement.executeUpdate(sql);
+        }
     }
 
     public static Javalin getApp() throws Exception {
@@ -42,12 +60,15 @@ public final class App {
 
         BaseRepository.dataSource = dataSource;
 
+        initDatabase();
 
-        app.get("/", ctx -> ctx.render("urls/main.jte"));
+        app.get("/", UrlController::main);
 
         app.post(NamedRoutes.urlsPath(), UrlController::addUrlHandler);
 
         app.get(NamedRoutes.urlsPath(), UrlController::index);
+
+        app.get(NamedRoutes.urlPath("{id}"), UrlController::show);
 
         return app;
     }
