@@ -31,8 +31,6 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    implementation("info.picocli:picocli:4.6.3")
-    annotationProcessor("info.picocli:picocli-codegen:4.6.3")
     implementation("com.fasterxml.jackson.core:jackson-core:2.15.0")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.15.0")
@@ -48,8 +46,9 @@ dependencies {
 
     implementation("com.h2database:h2:2.2.220")
     runtimeOnly("com.h2database:h2:2.2.224")
-    runtimeOnly("org.postgresql:postgresql:42.6.0")
+    runtimeOnly("org.postgresql:postgresql:42.7.2")
     implementation("com.zaxxer:HikariCP:5.0.1")
+
 
     implementation("org.projectlombok:lombok:1.18.30")
     annotationProcessor("org.projectlombok:lombok:1.18.30")

@@ -1,160 +1,89 @@
 package hexlet.code.repository;
 
-//import com.zaxxer.hikari.HikariDataSource;
-import hexlet.code.utils.Database;
-import io.javalin.http.Context;
+import hexlet.code.model.Url;
 
-import java.net.URI;
-import java.net.URL;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class UrlRepository extends BaseRepository {
-
     private static final Logger LOGGER = Logger.getLogger(UrlRepository.class.getName());
 
-    public static String addUrl(String inputUrl, Context ctx) {
-        String resultMessage = "";
-        try {
-            URL url = URI.create(inputUrl).toURL(); // Используем toURL для парсинга
-            String domain = getDomainWithProtocol(url);
+    public static void save(Url url) throws SQLException {
+        var sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            preparedStatement.setString(1, url.getName());
+            var createdAt = LocalDateTime.now();
+            preparedStatement.setTimestamp(2, Timestamp.valueOf(createdAt));
 
-            if (urlExists(domain)) {
-                resultMessage = "Страница уже существует";
-                ctx.sessionAttribute("flashMessage", resultMessage); // Flash-сообщение
+            preparedStatement.executeUpdate();
+            var generatedKeys = preparedStatement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                url.setId(generatedKeys.getLong(1));
+                url.setCreatedAt(createdAt);
+
+                LOGGER.info("URL saved: " + url.getName());
             } else {
-                addUrlToDatabase(domain);
-                resultMessage = "Страница успешно добавлена";
-                ctx.sessionAttribute("flashMessage", resultMessage); // Flash-сообщение
+                throw new SQLException("DB did not return an ID after saving an entity");
             }
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Некорректный URL: " + inputUrl, e);
-            resultMessage = "Некорректный URL";
-            ctx.sessionAttribute("flashMessage", resultMessage); // Flash-сообщение
-        }
-        return resultMessage;
-    }
-
-    private static String getDomainWithProtocol(URL url) {
-        String protocol = url.getProtocol();
-        String host = url.getHost();
-        int port = url.getPort();
-
-        StringBuilder domain = new StringBuilder(protocol + "://" + host);
-
-        if (port != -1) {
-            domain.append(":" + port);
-        }
-
-        return domain.toString();
-    }
-
-    /*private static void addUrlToDatabase(String domain) {
-        String query = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setString(1, domain);
-            statement.setString(2, getCurrentTimestamp());
-            statement.executeUpdate();
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Ошибка при добавлении в базу данных", e);
+            LOGGER.log(Level.SEVERE, "Error saving URL: " + url.getName(), e);
+            throw e;
         }
     }
 
-    private static boolean urlExists(String domain) {
-        String query = "SELECT COUNT(*) FROM urls WHERE name = ?";
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setString(1, domain);
-            ResultSet resultSet = statement.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1) > 0;
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Ошибка при проверке существования URL", e);
+    public static Optional<Url> findByName(String name) throws SQLException {
+        var sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, name);
+            try (var resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    Url url = new Url(
+                            resultSet.getString("name"),
+                            resultSet.getTimestamp("created_at").toLocalDateTime()
+                    );
+                    url.setId(resultSet.getLong("id"));
+                    return Optional.of(url);
+                }
+            }
         }
-        return false;
-    }*/
+        return Optional.empty();
+    }
 
-    public static boolean urlExists(String domain) {
-        String query = "SELECT COUNT(*) FROM urls WHERE name = ?";
-
-        try (Connection connection = Database.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setString(1, domain);
-            ResultSet resultSet = statement.executeQuery();
-            resultSet.next();
-            return resultSet.getInt(1) > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            return false;
+    public static boolean existsByName(String name) throws SQLException {
+        var sql = "SELECT 1 FROM urls WHERE name = ? LIMIT 1";
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql)) {
+            preparedStatement.setString(1, name);
+            try (var resultSet = preparedStatement.executeQuery()) {
+                return resultSet.next();
+            }
         }
     }
 
-    // Пример добавления URL
-    public static void addUrlToDatabase(String domain) {
-        String query = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
-
-        try (Connection connection = Database.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setString(1, domain);
-            statement.setString(2, new Timestamp(System.currentTimeMillis()).toString());
-            statement.executeUpdate();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static String getCurrentTimestamp() {
-        return new Timestamp(System.currentTimeMillis()).toString();
-    }
-
-    public static List<String> getAllUrls() {
-        List<String> urls = new ArrayList<>();
-        String query = "SELECT name FROM urls";
-
-        try (Connection connection = dataSource.getConnection();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery(query)) {
-
+    public static List<Url> getEntities() throws SQLException {
+        var sql = "SELECT id, name, created_at FROM urls";
+        List<Url> urls = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql);
+             var resultSet = preparedStatement.executeQuery()) {
             while (resultSet.next()) {
-                urls.add(resultSet.getString("name"));
+                Url url = new Url(
+                        resultSet.getString("name"),
+                        resultSet.getTimestamp("created_at").toLocalDateTime()
+                );
+                url.setId(resultSet.getLong("id"));
+                urls.add(url);
             }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Ошибка при получении URL из базы данных", e);
         }
         return urls;
-    }
-
-    public static String getUrlById(int id) {
-        String url = null;
-        String query = "SELECT name FROM urls WHERE id = ?";
-
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
-
-            statement.setInt(1, id);
-            ResultSet resultSet = statement.executeQuery();
-
-            if (resultSet.next()) {
-                url = resultSet.getString("name");
-            }
-        } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Ошибка при получении URL по ID", e);
-        }
-        return url;
     }
 }

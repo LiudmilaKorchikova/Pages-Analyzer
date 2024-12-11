@@ -1,6 +1,8 @@
 package hexlet.code;
 
-
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import hexlet.code.utils.NamedRoutes;
 import hexlet.code.controller.UrlController;
 import hexlet.code.repository.UrlRepository;
 import io.javalin.Javalin;
@@ -8,46 +10,51 @@ import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import io.javalin.rendering.template.JavalinJte;
 import gg.jte.resolve.ResourceCodeResolver;
-/*import io.javalin.http.Context;
-import io.javalin.rendering.template.JavalinJte;
-import java.net.URI;
-import java.net.URL;
-import java.sql.SQLException;*/
+
+import hexlet.code.repository.BaseRepository;
 
 
 public final class App {
 
     private static UrlRepository urlRepository;
 
-    public static Javalin getApp() throws Exception {
+    private static int getPort() {
+        String port = System.getenv().getOrDefault("PORT", "7070");
+        return Integer.valueOf(port);
+    }
 
+    public static Javalin getApp() throws Exception {
 
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
             config.fileRenderer(new JavalinJte(createTemplateEngine()));
         });
 
-        app.get("/add-url", ctx -> {
-            ctx.render("/add-url"); // Страница добавления URL
-        });
+        String databaseUrl = System.getenv().getOrDefault("JDBC_DATABASE_URL",
+                "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;");
 
-        // Обработчик для добавления URL
-        app.post("/add-url", UrlController::addUrlHandler);
 
-        // Маршрут для отображения всех URL
-        app.get("/urls", UrlController::showUrlsHandler);
+        HikariConfig hikariConfig = new HikariConfig();
+        hikariConfig.setJdbcUrl(databaseUrl);
 
-        app.get("/urls/:id", UrlController::showUrlByIdHandler);
+
+        HikariDataSource dataSource = new HikariDataSource(hikariConfig);
+
+        BaseRepository.dataSource = dataSource;
+
+
+        app.get("/", ctx -> ctx.render("urls/main.jte"));
+
+        app.post(NamedRoutes.urlsPath(), UrlController::addUrlHandler);
+
+        app.get(NamedRoutes.urlsPath(), UrlController::index);
 
         return app;
     }
 
     public static void main(String[] args) throws Exception {
-        String portEnv = System.getenv("PORT");
-        int port = (portEnv != null) ? Integer.parseInt(portEnv) : 7000;
         Javalin app = getApp();
-        app.start(port);
-
+        app.start(getPort());
     }
 
     private static TemplateEngine createTemplateEngine() {
