@@ -63,11 +63,8 @@ public final class App {
         initDatabase();
 
         app.get("/", UrlController::main);
-
         app.post(NamedRoutes.urlsPath(), UrlController::addUrlHandler);
-
         app.get(NamedRoutes.urlsPath(), UrlController::index);
-
         app.get(NamedRoutes.urlPath("{id}"), UrlController::show);
 
         return app;
