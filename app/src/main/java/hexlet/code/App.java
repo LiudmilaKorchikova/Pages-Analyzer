@@ -48,19 +48,9 @@ public final class App {
             config.fileRenderer(new JavalinJte(createTemplateEngine()));
         });
 
-        String databaseUrl = String.format(
-                "jdbc:postgresql://%s:%s/%s?user=%s&password=%s",
-                System.getenv("HOST"),
-                System.getenv("DB_PORT"),
-                System.getenv("DATABASE"),
-                System.getenv("USERNAME"),
-                System.getenv("PASSWORD")
-        );
-
-        if (databaseUrl == null || databaseUrl.isEmpty()) {
-            databaseUrl = System.getenv().getOrDefault("JDBC_DATABASE_URL",
+        String databaseUrl = System.getenv().getOrDefault("JDBC_DATABASE_URL",
                     "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;");
-        }
+
 
         HikariConfig hikariConfig = new HikariConfig();
         hikariConfig.setJdbcUrl(databaseUrl);
@@ -76,6 +66,7 @@ public final class App {
         app.post(NamedRoutes.urlsPath(), UrlController::addUrlHandler);
         app.get(NamedRoutes.urlsPath(), UrlController::index);
         app.get(NamedRoutes.urlPath("{id}"), UrlController::show);
+        app.post(NamedRoutes.urlChecksPath("{id}"), UrlController::checkUrlHandler);
 
         return app;
     }

@@ -1,4 +1,5 @@
 @import hexlet.code.dto.urls.UrlPage
+@import hexlet.code.utils.NamedRoutes
 
 @param UrlPage page
 
@@ -6,26 +7,67 @@
 page = page,
 content = @`
     <div>
-        <table class="table">
+        <h1>Сайт: ${page.getUrl().getName()}</h1>
+    </div>
+    <div>
+        <table class="table table-striped table-bordered">
             <tbody>
             <tr>
-                <td>Сайт:</td>
-                <td>${page.getUrl().getName()}</td>
-            </tr>
-            <tr>
-                <td>ID</td>
+                <td><strong>ID</strong></td>
                 <td>${page.getUrl().getId()}</td>
             </tr>
             <tr>
-                <td>Имя</td>
+                <td><strong>Имя</strong></td>
                 <td>${page.getUrl().getName()}</td>
             </tr>
             <tr>
-                <td>Дата создания</td>
-                <td>${String.valueOf(page.getUrl().getCreatedAt())}</td>
+                <td><strong>Дата создания</strong></td>
+                <td>${page.getUrl().getFormattedCreatedAt()}</td>
             </tr>
             </tbody>
         </table>
+    </div>
+    <div>
+        <form action="${NamedRoutes.urlChecksPath(page.getUrl().getId())}" method="POST">
+            <button type="submit" class="btn btn-primary">Проверить</button>
+        </form>
+    </div>
+    <div>
+        @if(!page.getUrl().getUrlChecks().isEmpty())
+            <h3>Результаты проверок:</h3>
+            <table class="table table-striped table-bordered">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Дата проверки</th>
+                    <th>Статус-код</th>
+                    <th>Title</th>
+                    <th>H1</th>
+                    <th>Description</th>
+                </tr>
+                </thead>
+                <tbody>
+                @for(var check : page.getUrl().getUrlChecks())
+                    <tr>
+                        <td>${check.getId()}</td>
+                        <td>${check.getFormattedCreatedAt()}</td>
+                        <td>
+                            @if(check.getStatusCode() == 200)
+                                <span class="badge badge-success">${check.getStatusCode()}</span>
+                            @elseif(check.getStatusCode() >= 400)
+                                <span class="badge badge-danger">${check.getStatusCode()}</span>
+                            @else
+                                <span class="badge badge-warning">${check.getStatusCode()}</span>
+                            @endif
+                        </td>
+                        <td>${check.getTitle() != null ? check.getTitle() : "N/A"}</td>
+                        <td>${check.getH1() != null ? check.getH1() : "N/A"}</td>
+                        <td>${check.getDescription() != null ? check.getDescription() : "N/A"}</td>
+                    </tr>
+                @endfor
+                </tbody>
+            </table>
+        @endif
     </div>
 `
 )
