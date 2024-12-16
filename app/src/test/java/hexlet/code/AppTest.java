@@ -2,31 +2,32 @@ package hexlet.code;
 
 import hexlet.code.controller.UrlController;
 import hexlet.code.model.Url;
-import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
+import hexlet.code.utils.NamedRoutes;
 import io.javalin.Javalin;
 import io.javalin.http.Context;
 import io.javalin.testtools.JavalinTest;
 import io.javalin.validation.Validator;
-import okhttp3.HttpUrl;
+import kong.unirest.core.HttpResponse;
+import kong.unirest.core.Unirest;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import okhttp3.mockwebserver.RecordedRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
+
 
 
 import java.io.IOException;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Optional;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class AppTest {
 
@@ -38,8 +39,12 @@ public class AppTest {
     }
 
     @Test
-    public final void showTest() throws IOException, InterruptedException, SQLException {
-        MockWebServer server = new MockWebServer();
+    public final void testAdd() throws IOException, InterruptedException, SQLException {
+        Url url = new Url("https://example.com");
+        UrlRepository.save(url);
+
+        // Создаем и настраиваем мок-сервер
+        MockWebServer mockServer = new MockWebServer();
 
         MockResponse mockResponse = new MockResponse()
                 .addHeader("Content-Type", "text/html")
@@ -47,35 +52,60 @@ public class AppTest {
                 .setBody("{\"message\": \"This is a test response\"}")
                 .setResponseCode(200);
 
-        server.enqueue(mockResponse);
+        mockServer.enqueue(mockResponse);
+        mockServer.start();
 
-        HttpUrl baseUrl = server.url("http://localhost:7070/urls/1");
+        String baseUrl = mockServer.url("/").toString();
 
-        UrlController urlController = mock(UrlController.class);
-        UrlRepository urlRepository = mock(UrlRepository.class);
-        UrlCheckRepository urlCheckRepository = mock(UrlCheckRepository.class);
-        Context contextMock = mock(Context.class);
+        Unirest.config().defaultBaseUrl(baseUrl);
+
+        Context ctx = mock(Context.class);
+
+
+        when(ctx.formParam(anyString())).thenReturn("https://example.com");
+        UrlController.addUrlHandler(ctx);
+
+        verify(ctx).redirect(NamedRoutes.urlsPath());
+
+
+    }
+
+    @Test
+    public final void showTest() throws IOException, SQLException {
+        Url url = new Url("https://example.com");
+        UrlRepository.save(url);
+
+        MockWebServer mockServer = new MockWebServer();
+
+        MockResponse mockResponse = new MockResponse()
+                .addHeader("Content-Type", "text/html")
+                .addHeader("Date", "Mon, 16 Dec 2024 12:30:00 GMT")
+                .setBody("{\"message\": \"This is a test response\"}")
+                .setResponseCode(200);
+
+        mockServer.enqueue(mockResponse);
+        mockServer.start();
+
+        String baseUrl = mockServer.url("/").toString();
+
+        Unirest.config().defaultBaseUrl(baseUrl);
+
+        Context ctx = mock(Context.class);
+
+
+   
         Validator<Long> validatorMock = mock(Validator.class);
-        when(contextMock.pathParamAsClass("id", Long.class)).thenReturn(validatorMock);
+        when(ctx.pathParamAsClass("id", Long.class)).thenReturn(validatorMock);
 
         when(validatorMock.get()).thenReturn(1L);
+        UrlController.show(ctx);
 
-        Url url = new Url("https://www.example.com", LocalDateTime
-                .of(2024, 12, 16, 12, 30));
+        verify(ctx).render(anyString(), anyMap());
 
-        urlController.show(contextMock);
-
-        when(urlRepository.findByIndex(1L)).thenReturn(Optional.of(url));
-        when(urlCheckRepository.getEntitiesForThisUrl(1L)).thenReturn(new ArrayList<>());
-
-        RecordedRequest request = server.takeRequest();
-
-        assertEquals("GET", request.getMethod());
-        assertEquals("/urls/1", request.getRequestUrl().encodedPath());
-        assertEquals("text/html", request.getHeader("Content-Type"));
-
-        server.shutdown();
+        HttpResponse<String> response = Unirest.get("/").asString();
+        assert (response.getStatus() == 200);
     }
+
 
     @Test
     public void testMainPage() {
