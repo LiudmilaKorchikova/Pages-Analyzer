@@ -73,13 +73,8 @@ public final class App {
         return app;
     }
 
-    public static void main(String[] args) {
-        Javalin app = null;
-        try {
-            app = getApp();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public static void main(String[] args) throws Exception {
+        Javalin app = getApp();
         app.start(getPort());
     }
 

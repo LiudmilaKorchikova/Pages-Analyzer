@@ -32,12 +32,8 @@ public class AppTest {
     MockWebServer mockServer;
 
     @BeforeEach
-    public final void setUp() {
-        try {
-            app = App.getApp();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public final void setUp() throws Exception {
+        app = App.getApp();
     }
 
     private String readFixture(String filename) throws IOException, URISyntaxException {
