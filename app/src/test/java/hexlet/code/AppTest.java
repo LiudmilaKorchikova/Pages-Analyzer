@@ -1,15 +1,11 @@
 package hexlet.code;
 
-import hexlet.code.controller.UrlController;
 import hexlet.code.model.Url;
+import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlRepository;
-import hexlet.code.utils.NamedRoutes;
+import hexlet.code.repository.UrlCheckRepository;
 import io.javalin.Javalin;
-import io.javalin.http.Context;
 import io.javalin.testtools.JavalinTest;
-import io.javalin.validation.Validator;
-import kong.unirest.core.HttpResponse;
-import kong.unirest.core.Unirest;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,92 +14,67 @@ import org.junit.jupiter.api.Test;
 
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyMap;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+
 
 public class AppTest {
 
     Javalin app;
+    MockWebServer mockServer;
 
     @BeforeEach
     public final void setUp() throws Exception {
         app = App.getApp();
     }
 
-    @Test
-    public final void testAdd() throws IOException, InterruptedException, SQLException {
-        Url url = new Url("https://example.com");
-        UrlRepository.save(url);
-
-        // Создаем и настраиваем мок-сервер
-        MockWebServer mockServer = new MockWebServer();
-
-        MockResponse mockResponse = new MockResponse()
-                .addHeader("Content-Type", "text/html")
-                .addHeader("Date", "Mon, 16 Dec 2024 12:30:00 GMT")
-                .setBody("{\"message\": \"This is a test response\"}")
-                .setResponseCode(200);
-
-        mockServer.enqueue(mockResponse);
-        mockServer.start();
-
-        String baseUrl = mockServer.url("/").toString();
-
-        Unirest.config().defaultBaseUrl(baseUrl);
-
-        Context ctx = mock(Context.class);
-
-
-        when(ctx.formParam(anyString())).thenReturn("https://example.com");
-        UrlController.addUrlHandler(ctx);
-
-        verify(ctx).redirect(NamedRoutes.urlsPath());
-
-
+    private String readFixture(String filename) throws IOException, URISyntaxException {
+        return new String(Files.readAllBytes(Paths.get(getClass()
+                .getClassLoader().getResource(filename).toURI())), StandardCharsets.UTF_8);
     }
 
     @Test
-    public final void showTest() throws IOException, SQLException {
-        Url url = new Url("https://example.com");
-        UrlRepository.save(url);
-
-        MockWebServer mockServer = new MockWebServer();
-
-        MockResponse mockResponse = new MockResponse()
-                .addHeader("Content-Type", "text/html")
-                .addHeader("Date", "Mon, 16 Dec 2024 12:30:00 GMT")
-                .setBody("{\"message\": \"This is a test response\"}")
-                .setResponseCode(200);
-
-        mockServer.enqueue(mockResponse);
+    public final void testCheckUrlHandler() throws IOException, URISyntaxException, SQLException {
+        mockServer = new MockWebServer();
+        MockResponse mockedResponse = new MockResponse()
+                .setResponseCode(200)
+                .setBody(readFixture("index.html"));  // Убедитесь, что файл существует и метод работает
+        mockServer.enqueue(mockedResponse);
         mockServer.start();
 
-        String baseUrl = mockServer.url("/").toString();
+        String url = mockServer.url("/").toString().replaceAll("/$", "");
+        Url urlEntity = new Url(url);
+        UrlRepository.save(urlEntity);
+        Long id = urlEntity.getId();
 
-        Unirest.config().defaultBaseUrl(baseUrl);
+        JavalinTest.test(app, (server, client) -> {
+            String requestBody = "url=" + url;
 
-        Context ctx = mock(Context.class);
+            var response = client.post("/urls/" + id + "/checks", requestBody);
 
 
-   
-        Validator<Long> validatorMock = mock(Validator.class);
-        when(ctx.pathParamAsClass("id", Long.class)).thenReturn(validatorMock);
+            assertThat(response.code()).isEqualTo(200);
 
-        when(validatorMock.get()).thenReturn(1L);
-        UrlController.show(ctx);
+            assertThat(response.body().string()).contains(url);
 
-        verify(ctx).render(anyString(), anyMap());
 
-        HttpResponse<String> response = Unirest.get("/").asString();
-        assert (response.getStatus() == 200);
+            Optional<Url> result = UrlRepository.findByName(url);
+            assertThat(result).isPresent();
+
+
+            List<UrlCheck> checkResult = UrlCheckRepository.getEntitiesForThisUrl(id);
+            assertThat(checkResult).isNotEmpty();
+        });
+
+        mockServer.shutdown();
     }
 
 
@@ -116,7 +87,7 @@ public class AppTest {
     }
 
     @Test
-    public void testUrlsPage() {
+    public void testShow() {
         JavalinTest.test(app, (server, client) -> {
             var response = client.get("/urls");
             assertThat(response.code()).isEqualTo(200);
