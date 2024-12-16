@@ -8,10 +8,12 @@ import jakarta.persistence.OneToMany;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+@AllArgsConstructor
 @Getter
 @Setter
 @ToString(exclude = "urlChecks")

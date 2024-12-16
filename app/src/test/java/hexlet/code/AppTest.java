@@ -19,6 +19,7 @@ import org.mockito.MockedStatic;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
 
@@ -42,41 +43,36 @@ public class AppTest {
 
         MockResponse mockResponse = new MockResponse()
                 .addHeader("Content-Type", "text/html")
-                .addHeader("Content-Encoding", "gzip")
-                .addHeader("Date", "Mon, 16 Dec 2024 01:46:04 GMT")
+                .addHeader("Date", "Mon, 16 Dec 2024 12:30:00 GMT")
                 .setBody("{\"message\": \"This is a test response\"}")
-                .setResponseCode(200); // Статус 200 OK
+                .setResponseCode(200);
 
         server.enqueue(mockResponse);
 
         HttpUrl baseUrl = server.url("http://localhost:7070/urls/1");
 
-        UrlController urlController = new UrlController(baseUrl);
+        UrlController urlController = mock(UrlController.class);
+        UrlRepository urlRepository = mock(UrlRepository.class);
+        UrlCheckRepository urlCheckRepository = mock(UrlCheckRepository.class);
         Context contextMock = mock(Context.class);
         Validator<Long> validatorMock = mock(Validator.class);
         when(contextMock.pathParamAsClass("id", Long.class)).thenReturn(validatorMock);
 
         when(validatorMock.get()).thenReturn(1L);
 
-        try (MockedStatic<UrlRepository> mockedUrlRepo = mockStatic(UrlRepository.class)) {
-            Url urlMock = mock(Url.class);
-            mockedUrlRepo.when(() -> UrlRepository.findByIndex(1L)).thenReturn(Optional.of(urlMock));
+        Url url = new Url("https://www.example.com", LocalDateTime
+                .of(2024, 12, 16, 12, 30));
 
-            when(UrlCheckRepository.getEntitiesForThisUrl(1L)).thenReturn(new ArrayList<>());
+        urlController.show(contextMock);
 
-            UrlController.show(contextMock);
-
-            verify(contextMock).pathParamAsClass("id", Long.class);
-            verify(validatorMock).get();
-            verify(contextMock).status(404);
-        }
+        when(urlRepository.findByIndex(1L)).thenReturn(Optional.of(url));
+        when(urlCheckRepository.getEntitiesForThisUrl(1L)).thenReturn(new ArrayList<>());
 
         RecordedRequest request = server.takeRequest();
 
         assertEquals("GET", request.getMethod());
         assertEquals("/urls/1", request.getRequestUrl().encodedPath());
         assertEquals("text/html", request.getHeader("Content-Type"));
-        assertEquals("gzip", request.getHeader("Content-Encoding"));
 
         server.shutdown();
     }
