@@ -1,6 +1,6 @@
 package hexlet.code;
 
-import hexlet.code.controller.UrlController;
+/*import hexlet.code.controller.UrlController;
 import hexlet.code.model.Url;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.repository.UrlRepository;
@@ -34,10 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import io.javalin.Javalin;
+import io.javalin.Javalin;*/
 
 public class AppTest {
-    
 }
-
-
