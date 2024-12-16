@@ -11,6 +11,7 @@ import io.javalin.http.Context;
 import hexlet.code.repository.UrlRepository;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.Unirest;
+import okhttp3.HttpUrl;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -26,6 +27,8 @@ import java.time.LocalDateTime;
 import static io.javalin.rendering.template.TemplateUtil.model;
 
 public class UrlController {
+
+    public UrlController(HttpUrl url) throws SQLException { }
 
     public static void addUrlHandler(Context ctx) {
         String url = ctx.formParam("url");
