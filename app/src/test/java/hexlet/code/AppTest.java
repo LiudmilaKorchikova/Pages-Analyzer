@@ -105,6 +105,31 @@ public class AppTest {
     }
 
     @Test
+    public void testAddUrlHandlerWithInvalidUrl() {
+        String invalidUrl = "invalid-url";
+        JavalinTest.test(app, (server, client) -> {
+            var requestBody = "url=" + invalidUrl;
+            var response = client.post("/urls", requestBody);
+
+            assertThat(response.code()).isEqualTo(200);
+            assertThat(response.header("Location")).isEqualTo(null);
+        });
+    }
+
+    public void testAddUrlHandlerWithExistingUrl() throws SQLException {
+        var existingUrl = new Url("https://www.example.com");
+        UrlRepository.save(existingUrl);
+
+        JavalinTest.test(app, (server, client) -> {
+            var requestBody = "url=https://www.example.com";
+            var response = client.post("/urls", requestBody);
+
+            assertThat(response.code()).isEqualTo(302); // Перенаправление
+            assertThat(response.header("Location")).isEqualTo("/"); // Возвращаемся на главную страницу
+        });
+    }
+
+    @Test
     void testUrlNotFound() throws Exception {
         JavalinTest.test(app, (server, client) -> {
             var response = client.get("/urls/999999");
