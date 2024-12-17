@@ -1,7 +1,6 @@
 package hexlet.code.repository;
 
 import hexlet.code.model.Url;
-import hexlet.code.model.UrlCheck;
 
 import java.sql.DriverManager;
 import java.sql.Connection;
@@ -18,10 +17,51 @@ import java.util.logging.Logger;
 public class UrlRepository extends BaseRepository {
     private static final Logger LOGGER = Logger.getLogger(UrlRepository.class.getName());
 
+    private static Optional<Url> executeQuery(String sql, Object... params) throws SQLException {
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql)) {
+
+            for (int i = 0; i < params.length; i++) {
+                preparedStatement.setObject(i + 1, params[i]);
+            }
+
+            try (var resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    Url url = new Url(
+                            resultSet.getString("name"),
+                            resultSet.getTimestamp("created_at").toLocalDateTime()
+                    );
+                    url.setId(resultSet.getLong("id"));
+                    return Optional.of(url);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    private static List<Url> executeQueryList(String sql, Object... params) throws SQLException {
+        List<Url> urls = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql);
+             var resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                Url url = new Url(
+                        resultSet.getString("name"),
+                        resultSet.getTimestamp("created_at").toLocalDateTime()
+                );
+                url.setId(resultSet.getLong("id"));
+                urls.add(url);
+            }
+        }
+        return urls;
+    }
+
     public static void save(Url url) throws SQLException {
         var sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
         try (var conn = dataSource.getConnection();
              var preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             preparedStatement.setString(1, url.getName());
             var createdAt = LocalDateTime.now();
             preparedStatement.setTimestamp(2, Timestamp.valueOf(createdAt));
@@ -43,47 +83,20 @@ public class UrlRepository extends BaseRepository {
     }
 
     public static Optional<Url> findByName(String name) throws SQLException {
-        var sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
-        try (var conn = dataSource.getConnection();
-             var preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setString(1, name);
-            try (var resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    Url url = new Url(
-                            resultSet.getString("name"),
-                            resultSet.getTimestamp("created_at").toLocalDateTime()
-                    );
-                    url.setId(resultSet.getLong("id"));
-                    return Optional.of(url);
-                }
-            }
-        }
-        return Optional.empty();
+        String sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
+        return executeQuery(sql, name);
     }
 
     public static Optional<Url> findByIndex(Long index) throws SQLException {
-        var sql = "SELECT id, name, created_at FROM urls WHERE id = ?";
-        try (var conn = dataSource.getConnection();
-             var preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, index);
-            try (var resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    Url url = new Url(
-                            resultSet.getString("name"),
-                            resultSet.getTimestamp("created_at").toLocalDateTime()
-                    );
-                    url.setId(resultSet.getLong("id"));
-                    return Optional.of(url);
-                }
-            }
-        }
-        return Optional.empty();
+        String sql = "SELECT id, name, created_at FROM urls WHERE id = ?";
+        return executeQuery(sql, index);
     }
 
     public static boolean existsByName(String name) throws SQLException {
         var sql = "SELECT 1 FROM urls WHERE name = ? LIMIT 1";
         try (var conn = dataSource.getConnection();
              var preparedStatement = conn.prepareStatement(sql)) {
+
             preparedStatement.setString(1, name);
             try (var resultSet = preparedStatement.executeQuery()) {
                 return resultSet.next();
@@ -93,24 +106,10 @@ public class UrlRepository extends BaseRepository {
 
     public static List<Url> getEntities() throws SQLException {
         var sql = "SELECT id, name, created_at FROM urls";
-        List<Url> urls = new ArrayList<>();
-        try (var conn = dataSource.getConnection();
-             var preparedStatement = conn.prepareStatement(sql);
-             var resultSet = preparedStatement.executeQuery()) {
-            while (resultSet.next()) {
-                Url url = new Url(
-                        resultSet.getString("name"),
-                        resultSet.getTimestamp("created_at").toLocalDateTime()
-                );
-                url.setId(resultSet.getLong("id"));
-                url.setUrlChecks(getChecksForUrl(url.getId()));
-                urls.add(url);
-            }
-        }
-        return urls;
+        return executeQueryList(sql);
     }
 
-    private static List<UrlCheck> getChecksForUrl(Long urlId) throws SQLException {
+    /*private static List<UrlCheck> getChecksForUrl(Long urlId) throws SQLException {
         var sql = "SELECT id, url_id, status_code, title, h1, description, created_at FROM url_checks WHERE url_id = ?";
         List<UrlCheck> checks = new ArrayList<>();
         try (var conn = dataSource.getConnection();
@@ -132,7 +131,7 @@ public class UrlRepository extends BaseRepository {
             }
         }
         return checks;
-    }
+    }*/
 
     public static void clear() {
         try (Connection connection = DriverManager
