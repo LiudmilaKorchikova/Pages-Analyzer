@@ -16,7 +16,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-public class UrlCheck {
+public final class UrlCheck {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

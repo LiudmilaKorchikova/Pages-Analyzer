@@ -18,7 +18,7 @@ import java.util.List;
 @Setter
 @ToString(exclude = "urlChecks")
 @Entity
-public class Url {
+public final class Url {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
