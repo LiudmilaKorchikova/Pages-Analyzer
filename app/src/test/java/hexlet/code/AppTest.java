@@ -32,7 +32,7 @@ public class AppTest {
     MockWebServer mockServer;
 
     @BeforeEach
-    public final void setUp() throws Exception {
+    public final void setUp() {
         app = App.getApp();
     }
 

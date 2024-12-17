@@ -41,7 +41,7 @@ public final class App {
         }
     }
 
-    public static Javalin getApp() throws Exception {
+    public static Javalin getApp() {
 
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
@@ -74,7 +74,13 @@ public final class App {
 
         BaseRepository.dataSource = dataSource;
 
-        initDatabase();
+        try {
+            initDatabase();
+        } catch (Exception e) {
+            System.err.println("Failed to initialize database: " + e.getMessage());
+            e.printStackTrace();
+            System.exit(1);
+        }
 
 
         app.get("/", UrlController::main);
@@ -86,7 +92,7 @@ public final class App {
         return app;
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         Javalin app = getApp();
         app.start(getPort());
     }
