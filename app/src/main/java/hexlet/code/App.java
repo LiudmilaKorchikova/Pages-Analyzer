@@ -41,7 +41,7 @@ public final class App {
         }
     }
 
-    public static Javalin getApp() {
+    public static Javalin getApp() throws Exception {
 
         var app = Javalin.create(config -> {
             config.bundledPlugins.enableDevLogging();
@@ -74,11 +74,8 @@ public final class App {
 
         BaseRepository.dataSource = dataSource;
 
-        try {
-            initDatabase();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        initDatabase();
+
 
         app.get("/", UrlController::main);
         app.post(NamedRoutes.urlsPath(), UrlController::addUrlHandler);
