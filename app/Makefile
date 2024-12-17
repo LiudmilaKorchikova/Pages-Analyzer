@@ -1,16 +1,16 @@
 .PHONY: build test checkstyle run-dist report
 
 build:
-        ./gradlew build
+	./gradlew build
 
 test:
-        ./gradlew test
+	./gradlew test
 
 checkstyle:
-        ./gradlew checkstyleMain checkstyleTest
+	./gradlew checkstyleMain checkstyleTest
 
 run-dist:
-        ./build/install/app/bin/app
+	./build/install/app/bin/app
 
 report:
-        ./gradlew jacocoTestReport
+	./gradlew jacocoTestReport
