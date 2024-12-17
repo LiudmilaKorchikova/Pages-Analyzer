@@ -4,7 +4,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import hexlet.code.utils.NamedRoutes;
 import hexlet.code.controller.UrlController;
-import hexlet.code.repository.UrlRepository;
 import io.javalin.Javalin;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
@@ -20,7 +19,7 @@ import hexlet.code.repository.BaseRepository;
 
 public final class App {
 
-    private static UrlRepository urlRepository;
+    private static String databaseUrl;
 
     private static int getPort() {
         String port = System.getenv().getOrDefault("PORT", "7070");
@@ -49,7 +48,7 @@ public final class App {
         });
 
 
-        String databaseUrl = System.getenv("HOST") != null
+        databaseUrl = System.getenv("HOST") != null
                 && System.getenv("DB_PORT") != null
                 && System.getenv("DATABASE") != null
                 && System.getenv("USERNAME") != null
@@ -62,8 +61,6 @@ public final class App {
                 System.getenv("USERNAME"),
                 System.getenv("PASSWORD"))
                 : "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;";
-
-
 
 
         HikariConfig hikariConfig = new HikariConfig();
@@ -95,6 +92,11 @@ public final class App {
     public static void main(String[] args) {
         Javalin app = getApp();
         app.start(getPort());
+        if (databaseUrl.startsWith("jdbc:postgresql")) {
+            System.out.println("PostgreSQL is being used JDBC URL: " + databaseUrl);
+        } else {
+            System.out.println("Local database is being used");
+        }
     }
 
     private static TemplateEngine createTemplateEngine() {
