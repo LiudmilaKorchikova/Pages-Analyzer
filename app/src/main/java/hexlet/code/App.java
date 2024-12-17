@@ -59,19 +59,8 @@ public final class App {
         });
 
 
-        databaseUrl = System.getenv("HOST") != null
-                && System.getenv("DB_PORT") != null
-                && System.getenv("DATABASE") != null
-                && System.getenv("USERNAME") != null
-                && System.getenv("PASSWORD") != null
-                ? String.format(
-                "jdbc:postgresql://%s:%s/%s?user=%s&password=%s",
-                System.getenv("HOST"),
-                System.getenv("DB_PORT"),
-                System.getenv("DATABASE"),
-                System.getenv("USERNAME"),
-                System.getenv("PASSWORD"))
-                : "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;";
+        databaseUrl = System.getenv().getOrDefault("JDBC_DATABASE_URL",
+                "jdbc:h2:mem:project;DB_CLOSE_DELAY=-1;");
 
 
 
