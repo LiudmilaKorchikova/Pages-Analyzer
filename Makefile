@@ -1,4 +1,4 @@
 .PHONY: build
 
 report:
-        make -C app report
+	make -C app report
