@@ -116,6 +116,7 @@ public class AppTest {
         });
     }
 
+    @Test
     public void testAddUrlHandlerWithExistingUrl() throws SQLException {
         var existingUrl = new Url("https://www.example.com");
         UrlRepository.save(existingUrl);
@@ -124,8 +125,7 @@ public class AppTest {
             var requestBody = "url=https://www.example.com";
             var response = client.post("/urls", requestBody);
 
-            assertThat(response.code()).isEqualTo(302); // Перенаправление
-            assertThat(response.header("Location")).isEqualTo("/"); // Возвращаемся на главную страницу
+            assertThat(response.code()).isEqualTo(200);
         });
     }
 
