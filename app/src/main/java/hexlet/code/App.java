@@ -43,8 +43,8 @@ public final class App {
     public static void clearDatabase() {
         try (Connection connection = BaseRepository.dataSource.getConnection()) {
             Statement statement = connection.createStatement();
-            statement.executeUpdate("DROP TABLE IF EXISTS url_checks");
-            statement.executeUpdate("DROP TABLE IF EXISTS urls");
+            statement.executeUpdate("DELETE FROM url_checks");
+            statement.executeUpdate("DELETE FROM urls");
         } catch (Exception e) {
             System.err.println("Failed to clear database: " + e.getMessage());
             e.printStackTrace();
