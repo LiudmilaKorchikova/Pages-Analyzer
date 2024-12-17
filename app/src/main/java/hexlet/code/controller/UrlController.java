@@ -100,36 +100,47 @@ public class UrlController {
     public static void checkUrlHandler(Context ctx) throws SQLException {
         var urlId = ctx.pathParamAsClass("id", Long.class).get();
         Url url = UrlRepository.findByIndex(urlId).orElse(null);
-        var check = new UrlCheck();
 
         if (url == null) {
-            ctx.status(404).result("URL not found");
+            handleUrlNotFound(ctx);
             return;
         }
 
         HttpResponse<String> response = Unirest.get(url.getName()).asString();
-        int statusCode = response.getStatus();
-
-        if (statusCode == 200) {
-            String html = response.getBody();
-            Document doc = Jsoup.parse(html);
-
-            String title = doc.title();
-            Element h1Element = doc.selectFirst("h1");
-            String h1 = h1Element != null ? h1Element.text() : null;
-
-            Element metaDescriptionElement = doc.selectFirst("meta[name=description]");
-            String metaDescription = metaDescriptionElement != null ? metaDescriptionElement.attr("content") : null;
-
-            check = new UrlCheck(urlId, statusCode, title, h1, metaDescription, LocalDateTime.now());
-            System.out.println("Page 200 check will be added");
-        } else {
-            check = new UrlCheck(urlId, statusCode, LocalDateTime.now());
-            System.out.println("Page NOT 200 check will be added");
-        }
+        UrlCheck check = createUrlCheck(urlId, response);
 
         UrlCheckRepository.save(check);
-        System.out.println("Page check added successfully");
         ctx.redirect(NamedRoutes.urlPath(urlId));
+    }
+
+    private static void handleUrlNotFound(Context ctx) {
+        ctx.status(404).result("URL not found");
+    }
+
+    private static UrlCheck createUrlCheck(Long urlId, HttpResponse<String> response) {
+        int statusCode = response.getStatus();
+        if (statusCode == 200) {
+            return createSuccessfulUrlCheck(urlId, response.getBody());
+        } else {
+            return createFailedUrlCheck(urlId, statusCode);
+        }
+    }
+
+    private static UrlCheck createSuccessfulUrlCheck(Long urlId, String html) {
+        Document doc = Jsoup.parse(html);
+        String title = doc.title();
+        Element h1Element = doc.selectFirst("h1");
+        String h1 = h1Element != null ? h1Element.text() : null;
+
+        Element metaDescriptionElement = doc.selectFirst("meta[name=description]");
+        String metaDescription = metaDescriptionElement != null ? metaDescriptionElement.attr("content") : null;
+
+        System.out.println("Page 200 check will be added");
+        return new UrlCheck(urlId, 200, title, h1, metaDescription, LocalDateTime.now());
+    }
+
+    private static UrlCheck createFailedUrlCheck(Long urlId, int statusCode) {
+        System.out.println("Page NOT 200 check will be added");
+        return new UrlCheck(urlId, statusCode, LocalDateTime.now());
     }
 }
