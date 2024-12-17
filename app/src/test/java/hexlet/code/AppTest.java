@@ -46,7 +46,7 @@ public class AppTest {
         mockServer = new MockWebServer();
         MockResponse mockedResponse = new MockResponse()
                 .setResponseCode(200)
-                .setBody(readFixture("index.html"));  // Убедитесь, что файл существует и метод работает
+                .setBody(readFixture("index.html"));
         mockServer.enqueue(mockedResponse);
         mockServer.start();
 
