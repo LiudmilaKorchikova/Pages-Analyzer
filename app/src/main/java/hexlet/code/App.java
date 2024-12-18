@@ -23,7 +23,7 @@ public final class App {
 
     private static int getPort() {
         String port = System.getenv().getOrDefault("DB_PORT", "7070");
-        return Integer.valueOf(port);
+        return Integer.parseInt(port);
     }
 
     public static void initDatabase() throws Exception {

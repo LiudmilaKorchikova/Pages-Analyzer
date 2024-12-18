@@ -1,10 +1,5 @@
 package hexlet.code.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Lob;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import lombok.AllArgsConstructor;
@@ -15,19 +10,15 @@ import lombok.Setter;
 @AllArgsConstructor
 @Getter
 @Setter
-@Entity
 public final class UrlCheck {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private int statusCode;
     private String title;
     private String h1;
 
-    @Lob
-    private String description;  // Для хранения больших текстов
+    private String description;
 
     private Long urlId;
 
