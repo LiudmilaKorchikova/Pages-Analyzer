@@ -9,12 +9,9 @@ import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import io.javalin.rendering.template.JavalinJte;
 import gg.jte.resolve.ResourceCodeResolver;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.Statement;
-
 import hexlet.code.repository.BaseRepository;
+
+import hexlet.code.utils.UtilsDatabase;
 
 
 public final class App {
@@ -24,31 +21,6 @@ public final class App {
     private static int getPort() {
         String port = System.getenv().getOrDefault("DB_PORT", "7070");
         return Integer.parseInt(port);
-    }
-
-    public static void initDatabase() throws Exception {
-        InputStream inputStream = App.class.getClassLoader().getResourceAsStream("urls.sql");
-        if (inputStream == null) {
-            throw new Exception("SQL script not found in resources!");
-        }
-
-        String sql = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-
-        try (Connection connection = BaseRepository.dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            statement.executeUpdate(sql);
-        }
-    }
-
-    public static void clearDatabase() {
-        try (Connection connection = BaseRepository.dataSource.getConnection()) {
-            Statement statement = connection.createStatement();
-            statement.executeUpdate("DELETE FROM url_checks");
-            statement.executeUpdate("DELETE FROM urls");
-        } catch (Exception e) {
-            System.err.println("Failed to clear database: " + e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     public static Javalin getApp() {
@@ -73,7 +45,7 @@ public final class App {
         BaseRepository.dataSource = dataSource;
 
         try {
-            initDatabase();
+            UtilsDatabase.init();
         } catch (Exception e) {
             System.err.println("Failed to initialize database: " + e.getMessage());
             e.printStackTrace();
@@ -89,7 +61,7 @@ public final class App {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("Shutting down...");
-            clearDatabase();
+            UtilsDatabase.clear();
             app.stop();
         }));
 
