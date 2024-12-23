@@ -11,8 +11,6 @@ import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
-
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -22,9 +20,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-
 import static org.assertj.core.api.Assertions.assertThat;
-
 
 public class AppTest {
 
@@ -58,25 +54,25 @@ public class AppTest {
         JavalinTest.test(app, (server, client) -> {
             String requestBody = "url=" + url;
 
-            var response = client.post("/urls/" + id + "/checks", requestBody);
-
+            var response = client.post("/urls/" + id + "/checks", requestBody); // Новый путь
 
             assertThat(response.code()).isEqualTo(200);
-
             assertThat(response.body().string()).contains(url);
-
-
-            Optional<Url> result = UrlRepository.findByName(url);
-            assertThat(result).isPresent();
-
 
             List<UrlCheck> checkResult = UrlCheckRepository.getEntitiesForThisUrl(id);
             assertThat(checkResult).isNotEmpty();
+
+            UrlCheck urlCheck = checkResult.get(0);
+            assertThat(urlCheck.getStatusCode()).isEqualTo(200);
+            assertThat(urlCheck.getTitle()).isEqualTo("Test Page");
+            assertThat(urlCheck.getH1()).isEqualTo("Welcome to the Test Page");
+            assertThat(urlCheck.getDescription())
+                    .isEqualTo("This is a test page for checking the URL handler.");
+            assertThat(urlCheck.getUrlId()).isEqualTo(id);
         });
 
         mockServer.shutdown();
     }
-
 
     @Test
     public void testMainPage() {
@@ -87,32 +83,55 @@ public class AppTest {
     }
 
     @Test
-    public void testShow() {
+    public void testShow() throws SQLException {
+
+        String testUrl = "https://example.com";
+        Url urlEntity = new Url(testUrl);
+        UrlRepository.save(urlEntity);
+        Long id = urlEntity.getId();
+
         JavalinTest.test(app, (server, client) -> {
+
             var response = client.get("/urls");
+
             assertThat(response.code()).isEqualTo(200);
+
+            String responseBody = response.body().string();
+            assertThat(responseBody).contains(testUrl);
+            assertThat(responseBody).contains("/urls/" + id);
         });
     }
 
     @Test
-    public void testAddUrl() throws SQLException {
-        var url = new Url("https://www.example.com");
+    public void testGetUrlById() throws SQLException {
+        var testUrl = "https://www.example.com";
+        var url = new Url(testUrl);
         UrlRepository.save(url);
+        Long id = url.getId();
+
         JavalinTest.test(app, (server, client) -> {
-            var response = client.get("/urls/" + url.getId());
+            var response = client.get("/urls/" + id);
+
             assertThat(response.code()).isEqualTo(200);
+
+            String responseBody = response.body().string();
+            assertThat(responseBody).contains(testUrl);
         });
     }
 
     @Test
     public void testAddUrlHandlerWithInvalidUrl() {
         String invalidUrl = "invalid-url";
+
         JavalinTest.test(app, (server, client) -> {
             var requestBody = "url=" + invalidUrl;
+
             var response = client.post("/urls", requestBody);
 
             assertThat(response.code()).isEqualTo(200);
-            assertThat(response.header("Location")).isEqualTo(null);
+
+            List<Url> savedUrls = UrlRepository.getEntities();
+            assertThat(savedUrls).noneMatch(url -> url.getName().equals(invalidUrl));
         });
     }
 
@@ -126,6 +145,11 @@ public class AppTest {
             var response = client.post("/urls", requestBody);
 
             assertThat(response.code()).isEqualTo(200);
+
+            List<Url> savedUrls = UrlRepository.getEntities();
+            assertThat(savedUrls)
+                    .filteredOn(url -> url.getName().equals("https://www.example.com"))
+                    .hasSize(1);
         });
     }
 

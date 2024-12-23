@@ -24,29 +24,27 @@ public final class UrlCheck {
 
     private LocalDateTime createdAt;
 
-    public UrlCheck() { }
-
-    public UrlCheck(Long urlId, int statusCode, String title, String h1, String description, LocalDateTime createdAt) {
+    public UrlCheck(Long urlId, int statusCode, String title, String h1, String description) {
         this.urlId = urlId;
         this.statusCode = statusCode;
         this.title = title;
         this.h1 = h1;
         this.description = description;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
-    public UrlCheck(Long urlId, int statusCode, String title, String h1, LocalDateTime createdAt) {
+    public UrlCheck(Long urlId, int statusCode, String title, String h1) {
         this.statusCode = statusCode;
         this.title = title;
         this.h1 = h1;
         this.urlId = urlId;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
-    public UrlCheck(Long urlId, int statusCode, LocalDateTime createdAt) {
+    public UrlCheck(Long urlId, int statusCode) {
         this.urlId = urlId;
         this.statusCode = statusCode;
-        this.createdAt = createdAt;
+        this.createdAt = LocalDateTime.now();
     }
 
     public String getFormattedCreatedAt() {

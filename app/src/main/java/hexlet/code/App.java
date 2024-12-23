@@ -2,16 +2,17 @@ package hexlet.code;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import hexlet.code.utils.NamedRoutes;
-import hexlet.code.controller.UrlController;
 import io.javalin.Javalin;
 import gg.jte.ContentType;
 import gg.jte.TemplateEngine;
 import io.javalin.rendering.template.JavalinJte;
 import gg.jte.resolve.ResourceCodeResolver;
-import hexlet.code.repository.BaseRepository;
 
+import hexlet.code.repository.BaseRepository;
 import hexlet.code.utils.UtilsDatabase;
+import hexlet.code.utils.NamedRoutes;
+import hexlet.code.controller.UrlController;
+import hexlet.code.controller.UrlCheckController;
 
 
 public final class App {
@@ -47,9 +48,7 @@ public final class App {
         try {
             UtilsDatabase.init();
         } catch (Exception e) {
-            System.err.println("Failed to initialize database: " + e.getMessage());
-            e.printStackTrace();
-            System.exit(1);
+            throw new RuntimeException("Failed to initialize database", e);
         }
 
 
@@ -57,13 +56,7 @@ public final class App {
         app.post(NamedRoutes.urlsPath(), UrlController::addUrlHandler);
         app.get(NamedRoutes.urlsPath(), UrlController::index);
         app.get(NamedRoutes.urlPath("{id}"), UrlController::show);
-        app.post(NamedRoutes.urlChecksPath("{id}"), UrlController::checkUrlHandler);
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.out.println("Shutting down...");
-            UtilsDatabase.clear();
-            app.stop();
-        }));
+        app.post(NamedRoutes.urlChecksPath("{id}"), UrlCheckController::checkUrlHandler);
 
 
         return app;

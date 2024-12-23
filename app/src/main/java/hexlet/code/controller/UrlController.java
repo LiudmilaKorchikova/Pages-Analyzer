@@ -1,25 +1,17 @@
 package hexlet.code.controller;
 
+import io.javalin.http.Context;
+import hexlet.code.repository.UrlRepository;
+import java.net.URI;
+import java.net.URL;
+import java.sql.SQLException;
+
 import hexlet.code.dto.urls.MainPage;
 import hexlet.code.dto.urls.UrlPage;
 import hexlet.code.dto.urls.UrlsPage;
 import hexlet.code.model.Url;
-import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
 import hexlet.code.utils.NamedRoutes;
-import io.javalin.http.Context;
-import hexlet.code.repository.UrlRepository;
-import kong.unirest.core.HttpResponse;
-import kong.unirest.core.Unirest;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-
-
-import java.net.URI;
-import java.net.URL;
-import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 
 
@@ -38,14 +30,11 @@ public class UrlController {
             }
 
             if (!UrlRepository.existsByName(domain)) {
-                //var createdAt = LocalDateTime.now();
                 Url currentUrl = new Url(domain);
                 UrlRepository.save(currentUrl);
                 ctx.sessionAttribute("flash", "Страница успешно добавлена.");
-                System.out.println("GOOD ADDED");
             } else {
                 ctx.sessionAttribute("flash", "Страница уже существует.");
-                System.out.println("GOOD NOT ADDED");
             }
             ctx.redirect(NamedRoutes.urlsPath());
 
@@ -55,7 +44,6 @@ public class UrlController {
         }
     }
 
-    //list of urls
     public static void index(Context ctx) throws SQLException {
         String flash = ctx.consumeSessionAttribute("flash");
         var urls = UrlRepository.getEntities();
@@ -75,7 +63,6 @@ public class UrlController {
         ctx.render("urls/index.jte", model("page", urlsPage));
     }
 
-    //main page
     public static void main(Context ctx) {
         String flash = ctx.consumeSessionAttribute("flash");
         var page = new MainPage(flash);
@@ -83,7 +70,6 @@ public class UrlController {
         ctx.render("urls/main.jte", model("page", page));
     }
 
-    //show one url
     public static void show(Context ctx) throws SQLException {
         var id = ctx.pathParamAsClass("id", Long.class).get();
         var url = UrlRepository.findByIndex(id).orElse(null);
@@ -95,52 +81,5 @@ public class UrlController {
         url.setUrlChecks(checks);
         var page = new UrlPage(url);
         ctx.render("urls/show.jte", model("page", page));
-    }
-
-    public static void checkUrlHandler(Context ctx) throws SQLException {
-        var urlId = ctx.pathParamAsClass("id", Long.class).get();
-        Url url = UrlRepository.findByIndex(urlId).orElse(null);
-
-        if (url == null) {
-            handleUrlNotFound(ctx);
-            return;
-        }
-
-        HttpResponse<String> response = Unirest.get(url.getName()).asString();
-        UrlCheck check = createUrlCheck(urlId, response);
-
-        UrlCheckRepository.save(check);
-        ctx.redirect(NamedRoutes.urlPath(urlId));
-    }
-
-    private static void handleUrlNotFound(Context ctx) {
-        ctx.status(404).result("URL not found");
-    }
-
-    private static UrlCheck createUrlCheck(Long urlId, HttpResponse<String> response) {
-        int statusCode = response.getStatus();
-        if (statusCode == 200) {
-            return createSuccessfulUrlCheck(urlId, response.getBody());
-        } else {
-            return createFailedUrlCheck(urlId, statusCode);
-        }
-    }
-
-    private static UrlCheck createSuccessfulUrlCheck(Long urlId, String html) {
-        Document doc = Jsoup.parse(html);
-        String title = doc.title();
-        Element h1Element = doc.selectFirst("h1");
-        String h1 = h1Element != null ? h1Element.text() : null;
-
-        Element metaDescriptionElement = doc.selectFirst("meta[name=description]");
-        String metaDescription = metaDescriptionElement != null ? metaDescriptionElement.attr("content") : null;
-
-        System.out.println("Page 200 check will be added");
-        return new UrlCheck(urlId, 200, title, h1, metaDescription, LocalDateTime.now());
-    }
-
-    private static UrlCheck createFailedUrlCheck(Long urlId, int statusCode) {
-        System.out.println("Page NOT 200 check will be added");
-        return new UrlCheck(urlId, statusCode, LocalDateTime.now());
     }
 }

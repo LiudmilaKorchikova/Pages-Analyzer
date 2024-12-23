@@ -1,9 +1,5 @@
 package hexlet.code.repository;
 
-import hexlet.code.model.Url;
-
-import java.sql.DriverManager;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -13,6 +9,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import hexlet.code.model.Url;
 
 public class UrlRepository extends BaseRepository {
     private static final Logger LOGGER = Logger.getLogger(UrlRepository.class.getName());
@@ -28,9 +26,7 @@ public class UrlRepository extends BaseRepository {
             try (var resultSet = preparedStatement.executeQuery()) {
                 if (resultSet.next()) {
                     Url url = new Url(
-                            resultSet.getString("name"),
-                            resultSet.getTimestamp("created_at").toLocalDateTime()
-                    );
+                            resultSet.getString("name"));
                     url.setId(resultSet.getLong("id"));
                     return Optional.of(url);
                 }
@@ -47,9 +43,7 @@ public class UrlRepository extends BaseRepository {
 
             while (resultSet.next()) {
                 Url url = new Url(
-                        resultSet.getString("name"),
-                        resultSet.getTimestamp("created_at").toLocalDateTime()
-                );
+                        resultSet.getString("name"));
                 url.setId(resultSet.getLong("id"));
                 urls.add(url);
             }
@@ -107,40 +101,5 @@ public class UrlRepository extends BaseRepository {
     public static List<Url> getEntities() throws SQLException {
         var sql = "SELECT id, name, created_at FROM urls";
         return executeQueryList(sql);
-    }
-
-    /*private static List<UrlCheck> getChecksForUrl(Long urlId) throws SQLException {
-        var sql = "SELECT id, url_id, status_code, title, h1, description, created_at FROM url_checks WHERE url_id = ?";
-        List<UrlCheck> checks = new ArrayList<>();
-        try (var conn = dataSource.getConnection();
-             var preparedStatement = conn.prepareStatement(sql)) {
-            preparedStatement.setLong(1, urlId);
-            try (var resultSet = preparedStatement.executeQuery()) {
-                while (resultSet.next()) {
-                    UrlCheck check = new UrlCheck(
-                            resultSet.getLong("url_id"),
-                            resultSet.getInt("status_code"),
-                            resultSet.getString("title"),
-                            resultSet.getString("h1"),
-                            resultSet.getString("description"),
-                            resultSet.getTimestamp("created_at").toLocalDateTime()
-                    );
-                    check.setId(resultSet.getLong("id"));
-                    checks.add(check);
-                }
-            }
-        }
-        return checks;
-    }*/
-
-    public static void clear() {
-        try (Connection connection = DriverManager
-                .getConnection("jdbc:h2:mem:test;DB_CLOSE_DELAY=-1", "sa", "")) {
-            try (Statement statement = connection.createStatement()) {
-                statement.execute("DELETE FROM urls");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 }
