@@ -5,7 +5,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @AllArgsConstructor
@@ -21,19 +20,12 @@ public final class Url {
 
     private List<UrlCheck> urlChecks;
 
+    private UrlCheck lastUrlCheck;
+
     public Url() { }
 
-    public Url(String name) {
+    public Url(String name, LocalDateTime createdAt) {
         this.name = name;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public UrlCheck getLastUrlCheck() {
-        return urlChecks.get(urlChecks.size() - 1);
-    }
-
-    public String getFormattedCreatedAt() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-        return createdAt.format(formatter);
+        this.createdAt = createdAt;
     }
 }

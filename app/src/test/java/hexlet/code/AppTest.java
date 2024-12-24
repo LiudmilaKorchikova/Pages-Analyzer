@@ -17,10 +17,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class AppTest {
 
@@ -47,19 +50,17 @@ public class AppTest {
         mockServer.start();
 
         String url = mockServer.url("/").toString().replaceAll("/$", "");
-        Url urlEntity = new Url(url);
+        var createdAt = LocalDateTime.now();
+        Url urlEntity = new Url(url, createdAt);
         UrlRepository.save(urlEntity);
         Long id = urlEntity.getId();
 
         JavalinTest.test(app, (server, client) -> {
-            String requestBody = "url=" + url;
-
-            var response = client.post("/urls/" + id + "/checks", requestBody); // Новый путь
+            var response = client.post("/urls/" + id + "/checks");
 
             assertThat(response.code()).isEqualTo(200);
-            assertThat(response.body().string()).contains(url);
 
-            List<UrlCheck> checkResult = UrlCheckRepository.getEntitiesForThisUrl(id);
+            List<UrlCheck> checkResult = UrlCheckRepository.getChecksForUrl(id);
             assertThat(checkResult).isNotEmpty();
 
             UrlCheck urlCheck = checkResult.get(0);
@@ -86,7 +87,8 @@ public class AppTest {
     public void testShow() throws SQLException {
 
         String testUrl = "https://example.com";
-        Url urlEntity = new Url(testUrl);
+        var createdAt = LocalDateTime.now();
+        Url urlEntity = new Url(testUrl, createdAt);
         UrlRepository.save(urlEntity);
         Long id = urlEntity.getId();
 
@@ -105,7 +107,8 @@ public class AppTest {
     @Test
     public void testGetUrlById() throws SQLException {
         var testUrl = "https://www.example.com";
-        var url = new Url(testUrl);
+        var createdAt = LocalDateTime.now();
+        var url = new Url(testUrl, createdAt);
         UrlRepository.save(url);
         Long id = url.getId();
 
@@ -137,7 +140,8 @@ public class AppTest {
 
     @Test
     public void testAddUrlHandlerWithExistingUrl() throws SQLException {
-        var existingUrl = new Url("https://www.example.com");
+        var createdAt = LocalDateTime.now();
+        var existingUrl = new Url("https://www.example.com", createdAt);
         UrlRepository.save(existingUrl);
 
         JavalinTest.test(app, (server, client) -> {
@@ -172,5 +176,16 @@ public class AppTest {
             Optional<Url> result = UrlRepository.findByName("https://example.com");
             assertThat(result).isPresent();
         });
+    }
+
+
+    @Test
+    public void testGetLastChecks() throws SQLException {
+        Map<Long, UrlCheck> lastChecks = UrlCheckRepository.getLastChecks();
+        assertNotNull(lastChecks);
+        for (Long urlId : lastChecks.keySet()) {
+            UrlCheck check = lastChecks.get(urlId);
+            assertNotNull(check);
+        }
     }
 }

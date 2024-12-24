@@ -1,18 +1,17 @@
 package hexlet.code.repository;
 
+import hexlet.code.model.UrlCheck;
+import lombok.extern.slf4j.Slf4j;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import hexlet.code.model.UrlCheck;
-
+@Slf4j
 public class UrlCheckRepository extends BaseRepository {
-    private static final Logger LOGGER = Logger.getLogger(UrlRepository.class.getName());
 
     public static void save(UrlCheck check) throws SQLException {
         var sql = "INSERT INTO url_checks (url_id, status_code, title, h1, description, created_at) "
@@ -31,17 +30,17 @@ public class UrlCheckRepository extends BaseRepository {
             if (generatedKeys.next()) {
                 check.setId(generatedKeys.getLong(1));
 
-                LOGGER.info("Check saved: " + check.getTitle() + " " + check.getH1());
+                log.info("Check saved: {} {}", check.getTitle(), check.getH1());
             } else {
                 throw new SQLException("DB did not return an ID after saving an entity");
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error saving Check: " + check.getTitle() + " " + check.getId(), e);
+            log.error("Error saving Check: {} {}", check.getTitle(), check.getId(), e);
             throw e;
         }
     }
 
-    public static List<UrlCheck> getEntitiesForThisUrl(Long urlId) throws SQLException {
+    public static List<UrlCheck> getChecksForUrl(Long urlId) throws SQLException {
         var sql = "SELECT id, url_id, status_code, title, h1, description, created_at FROM url_checks WHERE url_id = ?";
         List<UrlCheck> checks = new ArrayList<>();
         try (var conn = dataSource.getConnection();
@@ -56,7 +55,8 @@ public class UrlCheckRepository extends BaseRepository {
                             resultSet.getInt("status_code"),
                             resultSet.getString("title"),
                             resultSet.getString("h1"),
-                            resultSet.getString("description")
+                            resultSet.getString("description"),
+                            resultSet.getTimestamp("created_at").toLocalDateTime()
                     );
                     check.setId(resultSet.getLong("id"));
                     checks.add(check);
@@ -65,4 +65,42 @@ public class UrlCheckRepository extends BaseRepository {
         }
         return checks;
     }
+
+    public static Map<Long, UrlCheck> getLastChecks() throws SQLException {
+        String sql = """
+        SELECT uc.id, uc.url_id, uc.status_code, uc.title, uc.h1, uc.description, uc.created_at
+        FROM url_checks uc
+        INNER JOIN (
+            SELECT url_id, MAX(created_at) AS last_check
+            FROM url_checks
+            GROUP BY url_id
+        ) grouped_uc
+        ON uc.url_id = grouped_uc.url_id AND uc.created_at = grouped_uc.last_check
+            """;
+
+        Map<Long, UrlCheck> lastChecks = new HashMap<>();
+
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql);
+             var resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                UrlCheck check = new UrlCheck(
+                        resultSet.getLong("url_id"),
+                        resultSet.getInt("status_code"),
+                        resultSet.getString("title"),
+                        resultSet.getString("h1"),
+                        resultSet.getString("description"),
+                        resultSet.getTimestamp("created_at").toLocalDateTime()
+                );
+                check.setId(resultSet.getLong("id"));
+                check.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+
+                lastChecks.put(check.getUrlId(), check);
+            }
+        }
+
+        return lastChecks;
+    }
 }
+

@@ -1,5 +1,7 @@
 @import hexlet.code.dto.urls.UrlPage
 @import hexlet.code.utils.NamedRoutes
+@import hexlet.code.utils.DateFormatter
+@import java.util.Date
 
 @param UrlPage page
 
@@ -22,7 +24,7 @@ content = @`
             </tr>
             <tr>
                 <td><strong>Дата создания</strong></td>
-                <td>${page.getUrl().getFormattedCreatedAt()}</td>
+                <td>${DateFormatter.format(page.getUrl().getCreatedAt())}</td>
             </tr>
             </tbody>
         </table>
@@ -50,7 +52,7 @@ content = @`
                 @for(var check : page.getUrl().getUrlChecks())
                     <tr>
                         <td>${check.getId()}</td>
-                        <td>${check.getFormattedCreatedAt()}</td>
+                        <td>${DateFormatter.format(check.getCreatedAt())}</td>
                         <td>
                             @if(check.getStatusCode() == 200)
                                 <span class="badge badge-success">${check.getStatusCode()}</span>

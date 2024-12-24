@@ -1,5 +1,6 @@
 @import hexlet.code.dto.urls.UrlsPage
 @import hexlet.code.utils.NamedRoutes
+@import hexlet.code.utils.DateFormatter
 
 @param UrlsPage page
 
@@ -20,17 +21,19 @@ content = @`
             </thead>
             <tbody>
             @for(var url : page.getUrls())
-
                 <tr>
                     <td>${url.getId()}</td>
                     <td><a href="${NamedRoutes.urlPath(url.getId())}">${url.getName()}</a></td>
-                    <td>${url.getFormattedCreatedAt()}</td>
-                    @if(!url.getUrlChecks().isEmpty() && url.getUrlChecks() != null)
-                        <td>${url.getLastUrlCheck().getFormattedCreatedAt()}</td>
+                    <td>${DateFormatter.format(url.getCreatedAt())}</td>
+
+                    @if(url.getLastUrlCheck() != null)
+                        <td>${DateFormatter.format(url.getLastUrlCheck().getCreatedAt())}</td>
                         <td>${url.getLastUrlCheck().getStatusCode()}</td>
+                    @else
+                        <td>Нет данных</td>
+                        <td>---</td>
                     @endif
                 </tr>
-
             @endfor
             </tbody>
         </table>

@@ -1,10 +1,16 @@
 package hexlet.code.controller;
 
+import hexlet.code.model.UrlCheck;
 import io.javalin.http.Context;
 import hexlet.code.repository.UrlRepository;
+
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.Map;
 
 import hexlet.code.dto.urls.MainPage;
 import hexlet.code.dto.urls.UrlPage;
@@ -29,17 +35,27 @@ public class UrlController {
                 domain += ":" + parsedUrl.getPort();
             }
 
-            if (!UrlRepository.existsByName(domain)) {
-                Url currentUrl = new Url(domain);
-                UrlRepository.save(currentUrl);
-                ctx.sessionAttribute("flash", "Страница успешно добавлена.");
-            } else {
-                ctx.sessionAttribute("flash", "Страница уже существует.");
-            }
-            ctx.redirect(NamedRoutes.urlsPath());
+            try {
+                if (!UrlRepository.existsByName(domain)) {
+                    var createdAt = LocalDateTime.now();
+                    Url currentUrl = new Url(domain, createdAt);
+                    UrlRepository.save(currentUrl);
+                    ctx.sessionAttribute("flash", "Страница успешно добавлена.");
+                } else {
+                    ctx.sessionAttribute("flash", "Страница уже существует.");
+                }
+                ctx.redirect(NamedRoutes.urlsPath());
 
-        } catch (Exception e) {
+            } catch (SQLException e) {
+                ctx.sessionAttribute("flash", "Ошибка базы данных. Попробуйте позже.");
+                ctx.redirect("/");
+            }
+
+        } catch (URISyntaxException | MalformedURLException e) {
             ctx.sessionAttribute("flash", "Некорректный URL.");
+            ctx.redirect("/");
+        } catch (Exception e) {
+            ctx.sessionAttribute("flash", "Произошла непредвиденная ошибка.");
             ctx.redirect("/");
         }
     }
@@ -47,18 +63,16 @@ public class UrlController {
     public static void index(Context ctx) throws SQLException {
         String flash = ctx.consumeSessionAttribute("flash");
         var urls = UrlRepository.getEntities();
-        for (int i = 0; i < urls.size(); i++) {
-            var url = urls.get(i);
 
-            if (url == null) {
-                ctx.status(404).result("URL not found");
-                return;
-            }
+        // Получаем последние проверки для всех URL
+        Map<Long, UrlCheck> lastChecks = UrlCheckRepository.getLastChecks();
 
-
-            var checks = UrlCheckRepository.getEntitiesForThisUrl(url.getId());
-            url.setUrlChecks(checks);
+        // Присоединяем последние проверки к URL
+        for (var url : urls) {
+            UrlCheck lastCheck = lastChecks.get(url.getId());
+            url.setLastUrlCheck(lastCheck);
         }
+
         var urlsPage = new UrlsPage(urls, flash);
         ctx.render("urls/index.jte", model("page", urlsPage));
     }
@@ -72,14 +86,17 @@ public class UrlController {
 
     public static void show(Context ctx) throws SQLException {
         var id = ctx.pathParamAsClass("id", Long.class).get();
-        var url = UrlRepository.findByIndex(id).orElse(null);
-        if (url == null) {
-            ctx.status(404).result("URL not found");
-            return;
-        }
-        var checks = UrlCheckRepository.getEntitiesForThisUrl(id);
-        url.setUrlChecks(checks);
-        var page = new UrlPage(url);
-        ctx.render("urls/show.jte", model("page", page));
+
+        UrlRepository.findById(id).ifPresentOrElse(url -> {
+            try {
+                var checks = UrlCheckRepository.getChecksForUrl(id);
+                url.setUrlChecks(checks);
+                var page = new UrlPage(url);
+                ctx.render("urls/show.jte", model("page", page));
+            } catch (SQLException e) {
+                ctx.status(500).result("Internal Server Error");
+                e.printStackTrace();
+            }
+        }, () -> ctx.status(404).result("URL not found"));
     }
 }

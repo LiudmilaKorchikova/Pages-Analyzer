@@ -1,7 +1,6 @@
 package hexlet.code.model;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import lombok.AllArgsConstructor;
 
 import lombok.Getter;
@@ -24,31 +23,12 @@ public final class UrlCheck {
 
     private LocalDateTime createdAt;
 
-    public UrlCheck(Long urlId, int statusCode, String title, String h1, String description) {
+    public UrlCheck(Long urlId, int statusCode, String title, String h1, String description, LocalDateTime createdAt) {
         this.urlId = urlId;
         this.statusCode = statusCode;
         this.title = title;
         this.h1 = h1;
         this.description = description;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public UrlCheck(Long urlId, int statusCode, String title, String h1) {
-        this.statusCode = statusCode;
-        this.title = title;
-        this.h1 = h1;
-        this.urlId = urlId;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public UrlCheck(Long urlId, int statusCode) {
-        this.urlId = urlId;
-        this.statusCode = statusCode;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public String getFormattedCreatedAt() {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
-        return createdAt.format(formatter);
+        this.createdAt = createdAt;
     }
 }

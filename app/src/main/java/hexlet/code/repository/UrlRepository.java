@@ -1,5 +1,8 @@
 package hexlet.code.repository;
 
+import hexlet.code.model.Url;
+import lombok.extern.slf4j.Slf4j;
+
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
@@ -7,57 +10,19 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import hexlet.code.model.Url;
-
+@Slf4j
 public class UrlRepository extends BaseRepository {
-    private static final Logger LOGGER = Logger.getLogger(UrlRepository.class.getName());
-
-    private static Optional<Url> executeQuery(String sql, Object... params) throws SQLException {
-        try (var conn = dataSource.getConnection();
-             var preparedStatement = conn.prepareStatement(sql)) {
-
-            for (int i = 0; i < params.length; i++) {
-                preparedStatement.setObject(i + 1, params[i]);
-            }
-
-            try (var resultSet = preparedStatement.executeQuery()) {
-                if (resultSet.next()) {
-                    Url url = new Url(
-                            resultSet.getString("name"));
-                    url.setId(resultSet.getLong("id"));
-                    return Optional.of(url);
-                }
-            }
-        }
-        return Optional.empty();
-    }
-
-    private static List<Url> executeQueryList(String sql, Object... params) throws SQLException {
-        List<Url> urls = new ArrayList<>();
-        try (var conn = dataSource.getConnection();
-             var preparedStatement = conn.prepareStatement(sql);
-             var resultSet = preparedStatement.executeQuery()) {
-
-            while (resultSet.next()) {
-                Url url = new Url(
-                        resultSet.getString("name"));
-                url.setId(resultSet.getLong("id"));
-                urls.add(url);
-            }
-        }
-        return urls;
-    }
 
     public static void save(Url url) throws SQLException {
         var sql = "INSERT INTO urls (name, created_at) VALUES (?, ?)";
         try (var conn = dataSource.getConnection();
              var preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
             preparedStatement.setString(1, url.getName());
-            var createdAt = LocalDateTime.now();
+            var createdAt = url.getCreatedAt();
+            if (createdAt == null) {
+                createdAt = Timestamp.valueOf(LocalDateTime.now()).toLocalDateTime();
+            }
             preparedStatement.setTimestamp(2, Timestamp.valueOf(createdAt));
 
             preparedStatement.executeUpdate();
@@ -66,24 +31,46 @@ public class UrlRepository extends BaseRepository {
                 url.setId(generatedKeys.getLong(1));
                 url.setCreatedAt(createdAt);
 
-                LOGGER.info("URL saved: " + url.getName());
+                log.info("URL saved: {}", url.getName());
             } else {
                 throw new SQLException("DB did not return an ID after saving an entity");
             }
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, "Error saving URL: " + url.getName(), e);
+            log.error("Error saving URL: {}", url.getName(), e);
             throw e;
         }
     }
 
     public static Optional<Url> findByName(String name) throws SQLException {
-        String sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
-        return executeQuery(sql, name);
+        var sql = "SELECT id, name, created_at FROM urls WHERE name = ?";
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setString(1, name);
+
+            try (var resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(mapResultSetToUrl(resultSet));
+                }
+            }
+        }
+        return Optional.empty();
     }
 
-    public static Optional<Url> findByIndex(Long index) throws SQLException {
-        String sql = "SELECT id, name, created_at FROM urls WHERE id = ?";
-        return executeQuery(sql, index);
+    public static Optional<Url> findById(Long id) throws SQLException {
+        var sql = "SELECT id, name, created_at FROM urls WHERE id = ?";
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql)) {
+
+            preparedStatement.setLong(1, id);
+
+            try (var resultSet = preparedStatement.executeQuery()) {
+                if (resultSet.next()) {
+                    return Optional.of(mapResultSetToUrl(resultSet));
+                }
+            }
+        }
+        return Optional.empty();
     }
 
     public static boolean existsByName(String name) throws SQLException {
@@ -100,6 +87,23 @@ public class UrlRepository extends BaseRepository {
 
     public static List<Url> getEntities() throws SQLException {
         var sql = "SELECT id, name, created_at FROM urls";
-        return executeQueryList(sql);
+        List<Url> urls = new ArrayList<>();
+        try (var conn = dataSource.getConnection();
+             var preparedStatement = conn.prepareStatement(sql);
+             var resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                urls.add(mapResultSetToUrl(resultSet));
+            }
+        }
+        return urls;
+    }
+
+    private static Url mapResultSetToUrl(java.sql.ResultSet resultSet) throws SQLException {
+        var createdAt = LocalDateTime.now();
+        Url url = new Url(resultSet.getString("name"), createdAt);
+        url.setId(resultSet.getLong("id"));
+        url.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
+        return url;
     }
 }
