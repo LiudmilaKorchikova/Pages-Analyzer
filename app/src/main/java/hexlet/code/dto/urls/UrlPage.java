@@ -4,16 +4,17 @@ import hexlet.code.dto.BasePage;
 import hexlet.code.model.Url;
 
 
+import hexlet.code.model.UrlCheck;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.AllArgsConstructor;
 
+import java.util.List;
 
+@AllArgsConstructor
 @Getter
 @Setter
 public class UrlPage extends BasePage {
     private Url url;
-
-    public UrlPage(Url url) {
-        this.url = url;
-    }
+    private List<UrlCheck> urlChecks;
 }

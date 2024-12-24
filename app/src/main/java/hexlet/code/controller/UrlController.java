@@ -1,6 +1,5 @@
 package hexlet.code.controller;
 
-import hexlet.code.model.UrlCheck;
 import io.javalin.http.Context;
 import hexlet.code.repository.UrlRepository;
 
@@ -10,7 +9,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
-import java.util.Map;
 
 import hexlet.code.dto.urls.MainPage;
 import hexlet.code.dto.urls.UrlPage;
@@ -64,16 +62,9 @@ public class UrlController {
         String flash = ctx.consumeSessionAttribute("flash");
         var urls = UrlRepository.getEntities();
 
-        // Получаем последние проверки для всех URL
-        Map<Long, UrlCheck> lastChecks = UrlCheckRepository.getLastChecks();
+        var lastChecks = UrlCheckRepository.getLastChecks();
 
-        // Присоединяем последние проверки к URL
-        for (var url : urls) {
-            UrlCheck lastCheck = lastChecks.get(url.getId());
-            url.setLastUrlCheck(lastCheck);
-        }
-
-        var urlsPage = new UrlsPage(urls, flash);
+        var urlsPage = new UrlsPage(urls, flash, lastChecks);
         ctx.render("urls/index.jte", model("page", urlsPage));
     }
 
@@ -90,8 +81,9 @@ public class UrlController {
         UrlRepository.findById(id).ifPresentOrElse(url -> {
             try {
                 var checks = UrlCheckRepository.getChecksForUrl(id);
-                url.setUrlChecks(checks);
-                var page = new UrlPage(url);
+
+                var page = new UrlPage(url, checks);
+
                 ctx.render("urls/show.jte", model("page", page));
             } catch (SQLException e) {
                 ctx.status(500).result("Internal Server Error");

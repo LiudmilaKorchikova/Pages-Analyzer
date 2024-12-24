@@ -1,7 +1,6 @@
 @import hexlet.code.dto.urls.UrlPage
 @import hexlet.code.utils.NamedRoutes
 @import hexlet.code.utils.DateFormatter
-@import java.util.Date
 
 @param UrlPage page
 
@@ -35,7 +34,7 @@ content = @`
         </form>
     </div>
     <div>
-        @if(!page.getUrl().getUrlChecks().isEmpty())
+        @if(!page.getUrlChecks().isEmpty())
             <h3>Результаты проверок:</h3>
             <table class="table table-striped table-bordered">
                 <thead>
@@ -49,7 +48,7 @@ content = @`
                 </tr>
                 </thead>
                 <tbody>
-                @for(var check : page.getUrl().getUrlChecks())
+                @for(var check : page.getUrlChecks())
                     <tr>
                         <td>${check.getId()}</td>
                         <td>${DateFormatter.format(check.getCreatedAt())}</td>

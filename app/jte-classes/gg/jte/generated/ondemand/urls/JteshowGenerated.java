@@ -2,10 +2,9 @@ package gg.jte.generated.ondemand.urls;
 import hexlet.code.dto.urls.UrlPage;
 import hexlet.code.utils.NamedRoutes;
 import hexlet.code.utils.DateFormatter;
-import java.util.Date;
 public final class JteshowGenerated {
 	public static final String JTE_NAME = "urls/show.jte";
-	public static final int[] JTE_LINE_INFO = {0,0,1,2,3,5,5,5,7,7,10,10,12,12,12,19,19,19,23,23,23,27,27,27,33,33,33,33,33,33,33,33,33,38,38,52,52,54,54,54,55,55,55,57,57,58,58,58,59,59,60,60,60,61,61,62,62,62,63,63,65,65,65,66,66,66,67,67,67,69,69,72,72,74,74,74,75,75,75,5,5,5,5};
+	public static final int[] JTE_LINE_INFO = {0,0,1,2,4,4,4,6,6,9,9,11,11,11,18,18,18,22,22,22,26,26,26,32,32,32,32,32,32,32,32,32,37,37,51,51,53,53,53,54,54,54,56,56,57,57,57,58,58,59,59,59,60,60,61,61,61,62,62,64,64,64,65,65,65,66,66,66,68,68,71,71,73,73,73,74,74,74,4,4,4,4};
 	public static void render(gg.jte.html.HtmlTemplateOutput jteOutput, gg.jte.html.HtmlInterceptor jteHtmlInterceptor, UrlPage page) {
 		jteOutput.writeContent("\r\n");
 		gg.jte.generated.ondemand.layout.JtepageGenerated.render(jteOutput, jteHtmlInterceptor, new gg.jte.html.HtmlContent() {
@@ -32,9 +31,9 @@ public final class JteshowGenerated {
 					jteOutput.writeContent("\"");
 				}
 				jteOutput.writeContent(" method=\"POST\">\r\n            <button type=\"submit\" class=\"btn btn-primary\">Проверить</button>\r\n        </form>\r\n    </div>\r\n    <div>\r\n        ");
-				if (!page.getUrl().getUrlChecks().isEmpty()) {
+				if (!page.getUrlChecks().isEmpty()) {
 					jteOutput.writeContent("\r\n            <h3>Результаты проверок:</h3>\r\n            <table class=\"table table-striped table-bordered\">\r\n                <thead>\r\n                <tr>\r\n                    <th>ID</th>\r\n                    <th>Дата проверки</th>\r\n                    <th>Статус-код</th>\r\n                    <th>Title</th>\r\n                    <th>H1</th>\r\n                    <th>Description</th>\r\n                </tr>\r\n                </thead>\r\n                <tbody>\r\n                ");
-					for (var check : page.getUrl().getUrlChecks()) {
+					for (var check : page.getUrlChecks()) {
 						jteOutput.writeContent("\r\n                    <tr>\r\n                        <td>");
 						jteOutput.setContext("td", null);
 						jteOutput.writeUserContent(check.getId());

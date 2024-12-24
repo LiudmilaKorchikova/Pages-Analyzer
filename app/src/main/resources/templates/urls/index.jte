@@ -26,10 +26,10 @@ content = @`
                     <td><a href="${NamedRoutes.urlPath(url.getId())}">${url.getName()}</a></td>
                     <td>${DateFormatter.format(url.getCreatedAt())}</td>
 
-                    @if(url.getLastUrlCheck() != null)
-                        <td>${DateFormatter.format(url.getLastUrlCheck().getCreatedAt())}</td>
-                        <td>${url.getLastUrlCheck().getStatusCode()}</td>
-                    @else
+                    @if(page.getLastChecks().containsKey(url.getId()))  <!-- Если последняя проверка существует -->
+                        <td>${DateFormatter.format(page.getLastChecks().get(url.getId()).getCreatedAt())}</td>
+                        <td>${page.getLastChecks().get(url.getId()).getStatusCode()}</td>
+                    @else  <!-- Если проверок нет, выводим сообщение -->
                         <td>Нет данных</td>
                         <td>---</td>
                     @endif

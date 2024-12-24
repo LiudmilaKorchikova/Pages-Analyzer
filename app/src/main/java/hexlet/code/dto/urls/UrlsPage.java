@@ -1,21 +1,19 @@
 package hexlet.code.dto.urls;
 
-import java.util.List;
-
 import hexlet.code.dto.BasePage;
 import hexlet.code.model.Url;
-
-import lombok.AllArgsConstructor;
+import hexlet.code.model.UrlCheck;
+import java.util.List;
+import java.util.Map;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 @Getter
+@Setter
 public class UrlsPage extends BasePage {
     private List<Url> urls;
-
-    public UrlsPage(List<Url> urls, String flash) {
-        super();
-        setFlash(flash);
-        this.urls = urls;
-    }
+    private String flash;
+    private Map<Long, UrlCheck> lastChecks;
 }
