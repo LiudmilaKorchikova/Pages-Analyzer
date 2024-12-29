@@ -19,17 +19,14 @@ public class UrlRepository extends BaseRepository {
         try (var conn = dataSource.getConnection();
              var preparedStatement = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, url.getName());
-            var createdAt = url.getCreatedAt();
-            if (createdAt == null) {
-                createdAt = Timestamp.valueOf(LocalDateTime.now()).toLocalDateTime();
-            }
-            preparedStatement.setTimestamp(2, Timestamp.valueOf(createdAt));
+            var createdAt = Timestamp.valueOf(LocalDateTime.now());
+            preparedStatement.setTimestamp(2, createdAt);
 
             preparedStatement.executeUpdate();
             var generatedKeys = preparedStatement.getGeneratedKeys();
             if (generatedKeys.next()) {
                 url.setId(generatedKeys.getLong(1));
-                url.setCreatedAt(createdAt);
+                url.setCreatedAt(createdAt.toLocalDateTime());
 
                 log.info("URL saved: {}", url.getName());
             } else {
@@ -100,8 +97,7 @@ public class UrlRepository extends BaseRepository {
     }
 
     private static Url mapResultSetToUrl(java.sql.ResultSet resultSet) throws SQLException {
-        var createdAt = LocalDateTime.now();
-        Url url = new Url(resultSet.getString("name"), createdAt);
+        Url url = new Url(resultSet.getString("name"));
         url.setId(resultSet.getLong("id"));
         url.setCreatedAt(resultSet.getTimestamp("created_at").toLocalDateTime());
         return url;

@@ -17,7 +17,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -50,8 +49,7 @@ public class AppTest {
         mockServer.start();
 
         String url = mockServer.url("/").toString().replaceAll("/$", "");
-        var createdAt = LocalDateTime.now();
-        Url urlEntity = new Url(url, createdAt);
+        Url urlEntity = new Url(url);
         UrlRepository.save(urlEntity);
         Long id = urlEntity.getId();
 
@@ -87,8 +85,7 @@ public class AppTest {
     public void testShow() throws SQLException {
 
         String testUrl = "https://example.com";
-        var createdAt = LocalDateTime.now();
-        Url urlEntity = new Url(testUrl, createdAt);
+        Url urlEntity = new Url(testUrl);
         UrlRepository.save(urlEntity);
         Long id = urlEntity.getId();
 
@@ -107,8 +104,7 @@ public class AppTest {
     @Test
     public void testGetUrlById() throws SQLException {
         var testUrl = "https://www.example.com";
-        var createdAt = LocalDateTime.now();
-        var url = new Url(testUrl, createdAt);
+        var url = new Url(testUrl);
         UrlRepository.save(url);
         Long id = url.getId();
 
@@ -140,8 +136,7 @@ public class AppTest {
 
     @Test
     public void testAddUrlHandlerWithExistingUrl() throws SQLException {
-        var createdAt = LocalDateTime.now();
-        var existingUrl = new Url("https://www.example.com", createdAt);
+        var existingUrl = new Url("https://www.example.com");
         UrlRepository.save(existingUrl);
 
         JavalinTest.test(app, (server, client) -> {

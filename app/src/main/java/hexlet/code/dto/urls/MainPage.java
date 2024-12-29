@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 public class MainPage extends BasePage {
     public MainPage(String flash) {
-        super();
         setFlash(flash);
     }
 }

@@ -8,7 +8,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 import hexlet.code.dto.urls.MainPage;
 import hexlet.code.dto.urls.UrlPage;
@@ -26,34 +25,34 @@ public class UrlController {
     public static void addUrlHandler(Context ctx) {
         String url = ctx.formParam("url");
 
+        String domain = "";
+
         try {
             URL parsedUrl = new URI(url).toURL();
-            String domain = parsedUrl.getProtocol() + "://" + parsedUrl.getHost();
+            domain = parsedUrl.getProtocol() + "://" + parsedUrl.getHost();
             if (parsedUrl.getPort() != -1) {
                 domain += ":" + parsedUrl.getPort();
             }
-
-            try {
-                if (!UrlRepository.existsByName(domain)) {
-                    var createdAt = LocalDateTime.now();
-                    Url currentUrl = new Url(domain, createdAt);
-                    UrlRepository.save(currentUrl);
-                    ctx.sessionAttribute("flash", "Страница успешно добавлена.");
-                } else {
-                    ctx.sessionAttribute("flash", "Страница уже существует.");
-                }
-                ctx.redirect(NamedRoutes.urlsPath());
-
-            } catch (SQLException e) {
-                ctx.sessionAttribute("flash", "Ошибка базы данных. Попробуйте позже.");
-                ctx.redirect("/");
-            }
-
         } catch (URISyntaxException | MalformedURLException e) {
             ctx.sessionAttribute("flash", "Некорректный URL.");
             ctx.redirect("/");
         } catch (Exception e) {
             ctx.sessionAttribute("flash", "Произошла непредвиденная ошибка.");
+            ctx.redirect("/");
+        }
+
+        try {
+            if (!UrlRepository.existsByName(domain)) {
+                Url currentUrl = new Url(domain);
+                UrlRepository.save(currentUrl);
+                ctx.sessionAttribute("flash", "Страница успешно добавлена.");
+            } else {
+                ctx.sessionAttribute("flash", "Страница уже существует.");
+            }
+            ctx.redirect(NamedRoutes.urlsPath());
+
+        } catch (SQLException e) {
+            ctx.sessionAttribute("flash", "Ошибка базы данных. Попробуйте позже.");
             ctx.redirect("/");
         }
     }

@@ -7,13 +7,16 @@ import java.util.List;
 import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.AllArgsConstructor;
 
-@AllArgsConstructor
 @Getter
 @Setter
 public class UrlsPage extends BasePage {
     private List<Url> urls;
-    private String flash;
     private Map<Long, UrlCheck> lastChecks;
+
+    public UrlsPage(List<Url> urls, String flash, Map<Long, UrlCheck> lastChecks) {
+        setFlash(flash);
+        setUrls(urls);
+        setLastChecks(lastChecks);
+    }
 }
