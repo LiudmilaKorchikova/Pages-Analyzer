@@ -3,9 +3,7 @@ package hexlet.code.controller;
 import io.javalin.http.Context;
 import hexlet.code.repository.UrlRepository;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.sql.SQLException;
 
@@ -33,12 +31,10 @@ public class UrlController {
             if (parsedUrl.getPort() != -1) {
                 domain += ":" + parsedUrl.getPort();
             }
-        } catch (URISyntaxException | MalformedURLException e) {
+        } catch (Exception e) {
             ctx.sessionAttribute("flash", "Некорректный URL.");
             ctx.redirect("/");
-        } catch (Exception e) {
-            ctx.sessionAttribute("flash", "Произошла непредвиденная ошибка.");
-            ctx.redirect("/");
+            return;
         }
 
         try {

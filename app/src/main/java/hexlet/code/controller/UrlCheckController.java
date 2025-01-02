@@ -8,7 +8,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 
 import hexlet.code.model.UrlCheck;
 import hexlet.code.repository.UrlCheckRepository;
@@ -50,7 +49,6 @@ public class UrlCheckController {
         Element metaDescriptionElement = doc.selectFirst("meta[name=description]");
         String metaDescription = metaDescriptionElement != null ? metaDescriptionElement
                 .attr("content") : null;
-        var createdAt = LocalDateTime.now();
-        return new UrlCheck(urlId, 200, title, h1, metaDescription, createdAt);
+        return new UrlCheck(urlId, 200, title, h1, metaDescription);
     }
 }
