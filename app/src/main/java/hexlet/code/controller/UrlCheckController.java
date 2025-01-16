@@ -32,7 +32,7 @@ public class UrlCheckController {
             ctx.redirect(NamedRoutes.urlPath(urlId));
 
         } catch (UnirestException e) {
-            ctx.sessionAttribute("flash", "Некорректный адрес.");
+            ctx.sessionAttribute("flash", "Invalid URL.");
             ctx.redirect(NamedRoutes.urlPath(urlId));
             e.printStackTrace();
         } catch (SQLException e) {

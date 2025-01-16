@@ -32,7 +32,7 @@ public class UrlController {
                 domain += ":" + parsedUrl.getPort();
             }
         } catch (Exception e) {
-            ctx.sessionAttribute("flash", "Некорректный URL.");
+            ctx.sessionAttribute("flash", "Invalid URL.");
             ctx.redirect("/");
             return;
         }
@@ -41,14 +41,14 @@ public class UrlController {
             if (!UrlRepository.existsByName(domain)) {
                 Url currentUrl = new Url(domain);
                 UrlRepository.save(currentUrl);
-                ctx.sessionAttribute("flash", "Страница успешно добавлена.");
+                ctx.sessionAttribute("flash", "The page has been successfully added.");
             } else {
-                ctx.sessionAttribute("flash", "Страница уже существует.");
+                ctx.sessionAttribute("flash", "The page already exists.");
             }
             ctx.redirect(NamedRoutes.urlsPath());
 
         } catch (SQLException e) {
-            ctx.sessionAttribute("flash", "Ошибка базы данных. Попробуйте позже.");
+            ctx.sessionAttribute("flash", "Database error. Please try again later.");
             ctx.redirect("/");
         }
     }
