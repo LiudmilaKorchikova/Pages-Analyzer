@@ -1,3 +1,8 @@
+A web application that analyzes a webpage by a given URL.
+
+The URL is parsed, validated, and saved to the database upon successful validation.
+The page can then be analyzed, returning the response code, title, name, and description of the site.
+
 ### Hexlet tests and linter status:
 [![Actions Status](https://github.com/LiudmilaKorchikova/java-project-72/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/LiudmilaKorchikova/java-project-72/actions)
 ### Mainainability:
