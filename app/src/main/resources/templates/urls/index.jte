@@ -7,16 +7,16 @@
 @template.layout.page(
 page = page,
 content = @`
-    <h1>Список Url</h1>
+    <h1>URLs list</h1>
     <div>
         <table class="table table-striped table-bordered table-hover">
             <thead>
             <tr>
                 <th>ID</th>
                 <th>URL</th>
-                <th>Дата создания</th>
-                <th>Последняя проверка</th>
-                <th>Код ответа</th>
+                <th>Creation date</th>
+                <th>Last check</th>
+                <th>Response code</th>
             </tr>
             </thead>
             <tbody>
@@ -26,11 +26,11 @@ content = @`
                     <td><a href="${NamedRoutes.urlPath(url.getId())}">${url.getName()}</a></td>
                     <td>${DateFormatter.format(url.getCreatedAt())}</td>
 
-                    @if(page.getLastChecks().containsKey(url.getId()))  <!-- Если последняя проверка существует -->
+                    @if(page.getLastChecks().containsKey(url.getId()))
                         <td>${DateFormatter.format(page.getLastChecks().get(url.getId()).getCreatedAt())}</td>
                         <td>${page.getLastChecks().get(url.getId()).getStatusCode()}</td>
-                    @else  <!-- Если проверок нет, выводим сообщение -->
-                        <td>Нет данных</td>
+                    @else
+                        <td>No data</td>
                         <td>---</td>
                     @endif
                 </tr>

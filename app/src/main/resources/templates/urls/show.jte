@@ -18,11 +18,11 @@ content = @`
                 <td>${page.getUrl().getId()}</td>
             </tr>
             <tr>
-                <td><strong>Имя</strong></td>
+                <td><strong>URL</strong></td>
                 <td>${page.getUrl().getName()}</td>
             </tr>
             <tr>
-                <td><strong>Дата создания</strong></td>
+                <td><strong>Added at</strong></td>
                 <td>${DateFormatter.format(page.getUrl().getCreatedAt())}</td>
             </tr>
             </tbody>
@@ -30,18 +30,18 @@ content = @`
     </div>
     <div>
         <form action="${NamedRoutes.urlChecksPath(page.getUrl().getId())}" method="POST">
-            <button type="submit" class="btn btn-primary">Проверить</button>
+            <button type="submit" class="btn btn-primary">Check</button>
         </form>
     </div>
     <div>
         @if(!page.getUrlChecks().isEmpty())
-            <h3>Результаты проверок:</h3>
+            <h3>Checks results:</h3>
             <table class="table table-striped table-bordered">
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Дата проверки</th>
-                    <th>Статус-код</th>
+                    <th>Check date</th>
+                    <th>Response code</th>
                     <th>Title</th>
                     <th>H1</th>
                     <th>Description</th>
