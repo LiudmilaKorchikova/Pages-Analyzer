@@ -48,7 +48,7 @@ public class UrlController {
             ctx.redirect(NamedRoutes.urlsPath());
 
         } catch (SQLException e) {
-            ctx.sessionAttribute("flash", "Database error. Please try again later.");
+            ctx.sessionAttribute("flash", "Database error.");
             ctx.redirect("/");
         }
     }
