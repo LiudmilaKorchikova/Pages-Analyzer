@@ -8,8 +8,6 @@ The application follows the MVC structure, with database interactions performed 
 In development, the application uses the H2 database, and in production, it uses PostgreSQL.
 Covered by tests, with WebMockServer used for testing.
 
-### Hexlet tests and linter status:
-[![Actions Status](https://github.com/LiudmilaKorchikova/java-project-72/actions/workflows/hexlet-check.yml/badge.svg)](https://github.com/LiudmilaKorchikova/java-project-72/actions)
 ### Mainainability:
 [![Maintainability](https://api.codeclimate.com/v1/badges/0b40fc097341d227ed04/maintainability)](https://codeclimate.com/github/LiudmilaKorchikova/java-project-72/maintainability)
 ### Test Coverage:
